@@ -1,0 +1,21 @@
+Flask==3.0.3
+Werkzeug==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+WTForms==3.1.2
+email_validator==2.2.0
+ultralytics==8.4.115  # required for YOLO26 support
+opencv-python==4.10.0.84
+numpy==1.26.4
+pandas==2.2.2
+tensorflow==2.17.0
+Pillow==10.4.0
+python-dotenv==1.0.1
+reportlab==4.2.2
+
+# NOTE: The optional Fluvio live-streaming client is NOT listed here on
+# purpose — it's a compiled Rust extension with no native Windows wheel
+# and will fail to build on plain Windows. See requirements-fluvio.txt
+# and the README's "Live CCTV / Fluvio streaming" section (install it
+# inside WSL2 if you want real Fluvio streaming instead of direct mode).

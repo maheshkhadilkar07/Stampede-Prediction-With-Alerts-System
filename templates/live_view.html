@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+{% block title %}Live CCTV — StampedeGuard{% endblock %}
+{% block page_title %}Live CCTV{% endblock %}
+{% block page_sub %}AI-Based Real-Time Camera Monitoring{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+
+    <!-- LEFT SIDE -->
+    <div class="col-lg-8">
+
+        <div class="glass-card mb-3">
+
+            {% if is_running %}
+
+                <img
+                    id="live-feed-img"
+                    src="{{ url_for('live_feed') }}"
+                    class="video-frame w-100"
+                    alt="Live Feed">
+
+            {% else %}
+
+                <div class="text-center py-5">
+
+                    <i class="bi bi-camera-video-off"
+                       style="font-size:70px;"></i>
+
+                    <h5 class="mt-3">
+                        No Live Camera Running
+                    </h5>
+
+                    <p class="text-muted">
+                        Select a camera source and click
+                        <b>Start Live Session</b>.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+        {% if is_running %}
+
+        <div class="glass-card">
+
+            <div class="row text-center">
+
+                <div class="col-md-3">
+
+                    <h6>People</h6>
+
+                    <h3 id="live-person-count">0</h3>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <h6>Density</h6>
+
+                    <h3 id="live-density">0</h3>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <h6>Risk</h6>
+
+                    <span
+                        id="live-risk-badge"
+                        class="badge bg-success">
+
+                        SAFE
+
+                    </span>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <h6>FPS</h6>
+
+                    <h3 id="live-fps">0</h3>
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <div class="text-center">
+
+                <span
+                    id="live-mode-badge"
+                    class="badge {% if fluvio_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
+
+                    {{ "FLUVIO MODE" if fluvio_active else "DIRECT MODE" }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+
+    <div class="col-lg-4">
+
+        <div class="glass-card">
+
+            <h5 class="mb-4">
+
+                <i class="bi bi-camera-video me-2"></i>
+
+                Camera Control
+
+            </h5>
+
+            {% if is_running %}
+
+            <div class="alert alert-success">
+
+                <b>Live Camera Running</b>
+
+                <br>
+
+                Source :
+
+                {{ source_type }}
+
+            </div>
+
+            <form method="POST"
+                  action="{{ url_for('live_stop') }}">
+
+                <button
+                    class="btn btn-danger w-100">
+
+                    <i class="bi bi-stop-circle"></i>
+
+                    Stop Live Session
+
+                </button>
+
+            </form>
+
+            {% else %}
+
+            <form method="POST"
+                  action="{{ url_for('live_start') }}">
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+
+                        Camera Source
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="cameraType"
+                        name="source_type"
+                        onchange="toggleSource()">
+
+                        <option value="webcam">
+
+                            💻 Laptop Webcam
+
+                        </option>
+
+                        <option value="ip">
+
+                            📱 Android Phone (IP Webcam)
+
+                        </option>
+
+                        <option value="rtsp">
+
+                            🎥 RTSP CCTV Camera
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div
+                    id="urlBox"
+                    style="display:none;">
+
+                    <label class="form-label">
+
+                        Camera URL
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="source_url"
+                        id="source_url"
+                        placeholder="http://192.168.1.105:8080/video">
+
+                    <small class="text-muted">
+
+                        Example (Phone):
+
+                        http://192.168.1.105:8080/video
+
+                        <br>
+
+                        Example (RTSP):
+
+                        rtsp://username:password@192.168.1.10:554/stream
+
+                    </small>
+
+                </div>
+
+                <button
+                    class="btn btn-primary w-100 mt-4">
+
+                    <i class="bi bi-play-circle"></i>
+
+                    Start Live Session
+
+                </button>
+
+            </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+
+{% if is_running %}
+
+<script>
+pollLiveStatus();
+</script>
+
+{% endif %}
+
+<script>
+
+function toggleSource(){
+
+    let type=document.getElementById("cameraType").value;
+
+    let urlBox=document.getElementById("urlBox");
+
+    if(type==="webcam"){
+
+        urlBox.style.display="none";
+
+    }
+
+    else{
+
+        urlBox.style.display="block";
+
+    }
+
+}
+
+toggleSource();
+
+</script>
+
+{% endblock %}

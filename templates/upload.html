@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Upload Video — StampedeGuard{% endblock %}
+{% block page_title %}Upload Video{% endblock %}
+{% block page_sub %}Mode 1: analyze a recorded CCTV clip{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="glass-card">
+      <h5 class="mb-1"><i class="bi bi-cloud-upload me-2"></i>Upload CCTV Footage</h5>
+      <p class="text-muted-soft small mb-4">
+        Supported formats: MP4, AVI, MOV, MKV, WEBM. The video will be run through
+        YOLO person detection, crowd density estimation, and risk analysis automatically.
+      </p>
+
+      <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-4">
+          {{ form.video_file(class="form-control") }}
+          {% for error in form.video_file.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+        </div>
+
+        {{ form.submit(class="btn btn-gradient") }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

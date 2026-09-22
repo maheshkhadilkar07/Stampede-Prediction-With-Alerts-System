@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Analytics — {{ video.original_filename }}{% endblock %}
+{% block page_title %}Video Analytics{% endblock %}
+{% block page_sub %}{{ video.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-6">
+    <div class="glass-card stat-card">
+      <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+      <div class="stat-label">Peak Count</div>
+      <div class="stat-value">{{ video.peak_count }}</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card stat-card">
+      <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+      <div class="stat-label">Average Count</div>
+      <div class="stat-value">{{ "%.2f"|format(video.average_count or 0) }}</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card stat-card">
+      <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div class="stat-label">Final Risk</div>
+      <div class="stat-value">
+        <span class="risk-badge risk-{{ video.final_risk_level }}">{{ video.final_risk_level }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 col-6">
+    <div class="glass-card stat-card">
+      <div class="stat-icon"><i class="bi bi-stopwatch"></i></div>
+      <div class="stat-label">Processing Time</div>
+      <div class="stat-value">{{ "%.1f"|format(video.processing_time_seconds or 0) }}s</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="glass-card">
+      <h6 class="mb-3">People Count Over Time</h6>
+      <canvas id="personCountChart" height="220"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="glass-card">
+      <h6 class="mb-3">Risk Timeline</h6>
+      <canvas id="riskChart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  const timeline = {{ timeline_json|safe }};
+  const timestamps = timeline.map(e => e.second);
+  const riskLevelToScore = { SAFE: 0.1, LOW: 0.3, MEDIUM: 0.5, HIGH: 0.75, CRITICAL: 1.0 };
+  const riskScores = timeline.map(e => riskLevelToScore[e.level] ?? 0);
+  const counts = {{ counts_json|safe }};
+
+  renderPersonCountChart("personCountChart", timestamps, counts);
+  renderRiskChart("riskChart", timestamps, riskScores);
+</script>
+{% endblock %}

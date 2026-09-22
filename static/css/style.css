@@ -1,0 +1,361 @@
+/* =========================================================
+   style.css
+   Design concept: "Night Watch Ops Center"
+   A dark, low-glare command-center aesthetic (like a real CCTV
+   monitoring room), where risk-level colors are the loudest thing
+   on screen because that's the one piece of information that
+   actually matters at 3 AM. Glass panels float over a deep navy
+   gradient backdrop; everything else stays quiet and disciplined.
+   ========================================================= */
+
+:root {
+  --bg-deep: #0b1220;
+  --bg-panel: rgba(19, 28, 46, 0.65);
+  --bg-panel-solid: #131c2e;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --text-primary: #e8edf5;
+  --text-muted: #8b96ab;
+
+  --accent-cyan: #38bdf8;
+  --accent-violet: #818cf8;
+
+  --risk-safe: #2dd4bf;
+  --risk-low: #38bdf8;
+  --risk-medium: #fbbf24;
+  --risk-high: #fb7a3c;
+  --risk-critical: #ef4444;
+
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.10), transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(129, 140, 248, 0.10), transparent 40%),
+    linear-gradient(180deg, #0b1220 0%, #0a0f1c 100%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, .brand-font {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+/* ---------- Layout shell ---------- */
+
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: var(--bg-panel-solid);
+  border-right: 1px solid var(--border-glass);
+  padding: 24px 16px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 24px 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.sidebar .brand-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #061018;
+}
+
+.sidebar .brand-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.sidebar .brand-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted) !important;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary) !important;
+}
+
+.nav-link.active {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent-cyan) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.main-content {
+  flex: 1;
+  padding: 28px 36px 60px 36px;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.topbar .page-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.topbar .page-sub {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ---------- Glass card ---------- */
+
+.glass-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  padding: 22px;
+}
+
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card .stat-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.stat-card .stat-value {
+  font-size: 2.1rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  margin-top: 4px;
+}
+
+.stat-card .stat-icon {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  font-size: 1.4rem;
+  opacity: 0.35;
+}
+
+/* ---------- Risk badges ---------- */
+
+.risk-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.risk-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.risk-SAFE { background: rgba(45, 212, 191, 0.12); color: var(--risk-safe); }
+.risk-SAFE::before { background: var(--risk-safe); }
+
+.risk-LOW { background: rgba(56, 189, 248, 0.12); color: var(--risk-low); }
+.risk-LOW::before { background: var(--risk-low); }
+
+.risk-MEDIUM { background: rgba(251, 191, 36, 0.12); color: var(--risk-medium); }
+.risk-MEDIUM::before { background: var(--risk-medium); }
+
+.risk-HIGH { background: rgba(251, 122, 60, 0.14); color: var(--risk-high); }
+.risk-HIGH::before { background: var(--risk-high); }
+
+.risk-CRITICAL { background: rgba(239, 68, 68, 0.16); color: var(--risk-critical); animation: pulse-critical 1.6s infinite; }
+.risk-CRITICAL::before { background: var(--risk-critical); }
+
+@keyframes pulse-critical {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+/* ---------- Buttons ---------- */
+
+.btn-gradient {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+  border: none;
+  color: #061018;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.25);
+  color: #061018;
+}
+
+.btn-outline-glass {
+  background: transparent;
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+}
+
+.btn-outline-glass:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+/* ---------- Tables ---------- */
+
+.table-glass {
+  color: var(--text-primary);
+  --bs-table-bg: transparent;
+}
+
+.table-glass thead th {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.table-glass td {
+  border-bottom: 1px solid var(--border-glass);
+  font-size: 0.88rem;
+  vertical-align: middle;
+}
+
+/* ---------- Auth pages ---------- */
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.auth-signature {
+  width: 100%;
+  height: 3px;
+  border-radius: 3px;
+  margin: 18px 0 24px 0;
+  background: linear-gradient(90deg, var(--risk-safe), var(--risk-low), var(--risk-medium), var(--risk-high), var(--risk-critical));
+}
+
+/* ---------- Video player ---------- */
+
+.video-frame {
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-glass);
+  background: #000;
+}
+
+/* ---------- Utility ---------- */
+
+.text-muted-soft { color: var(--text-muted); }
+
+.form-control, .form-select {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+}
+
+.form-control:focus, .form-select:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.15);
+  color: black;
+}
+
+
+
+.form-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+::placeholder {
+  color: rgba(139, 150, 171, 0.6) !important;
+}
+
+a { color: var(--accent-cyan); }
+a:hover { color: var(--accent-violet); }
+
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main-content { padding: 20px; }
+}

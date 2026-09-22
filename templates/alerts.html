@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Alerts — StampedeGuard{% endblock %}
+{% block page_title %}Alert History{% endblock %}
+{% block page_sub %}Every HIGH / CRITICAL risk event raised across all videos{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  {% if alerts %}
+  <div class="table-responsive">
+    <table class="table table-glass">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Video</th>
+          <th>Risk Level</th>
+          <th>Message</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for alert in alerts %}
+        <tr>
+          <td class="text-muted-soft mono">{{ alert.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>
+            <a href="{{ url_for('video_status', video_id=alert.video_id) }}">
+              {{ alert.video.original_filename }}
+            </a>
+          </td>
+          <td><span class="risk-badge risk-{{ alert.risk_level }}">{{ alert.risk_level }}</span></td>
+          <td>{{ alert.message }}</td>
+          <td>
+            {% if alert.acknowledged %}
+              <span class="text-muted-soft small"><i class="bi bi-check2-circle me-1"></i>Acknowledged</span>
+            {% else %}
+              <span class="text-muted-soft small"><i class="bi bi-hourglass-split me-1"></i>Pending</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-muted-soft small">No alerts have been raised yet. HIGH / CRITICAL risk events will appear here automatically.</div>
+  {% endif %}
+</div>
+{% endblock %}

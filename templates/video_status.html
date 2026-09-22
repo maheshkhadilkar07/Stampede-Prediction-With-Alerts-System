@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Video Status — StampedeGuard{% endblock %}
+{% block page_title %}Processing Status{% endblock %}
+{% block page_sub %}{{ video.original_filename }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-7">
+    <div class="glass-card">
+      {% if video.processing_status == 'completed' and video.processed_filename %}
+        <video class="video-frame" controls>
+          <source src="{{ url_for('serve_processed_video', filename=video.processed_filename) }}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      {% else %}
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+          <div class="spinner-border text-info mb-3" role="status"></div>
+          <div class="text-muted-soft">Processing video, this may take a few minutes...</div>
+          <div class="mono small mt-2">Status: <span id="processing-status-label">{{ video.processing_status }}</span></div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="glass-card mb-3">
+      <h6 class="mb-3">Video Details</h6>
+      <div class="small text-muted-soft mb-1">Original filename</div>
+      <div class="mb-3">{{ video.original_filename }}</div>
+      <div class="small text-muted-soft mb-1">Source type</div>
+      <div class="mb-3">{{ video.source_type|upper }}</div>
+      <div class="small text-muted-soft mb-1">Status</div>
+      <div class="mb-3">{{ video.processing_status|upper }}</div>
+    </div>
+
+    {% if video.processing_status == 'completed' %}
+    <div class="glass-card d-flex flex-column gap-2">
+      <a href="{{ url_for('video_analytics', video_id=video.id) }}" class="btn btn-outline-glass">
+        <i class="bi bi-bar-chart-line me-2"></i>View Analytics
+      </a>
+      <form method="POST" action="{{ url_for('generate_report', video_id=video.id) }}">
+        <button type="submit" class="btn btn-gradient w-100">
+          <i class="bi bi-file-earmark-pdf me-2"></i>Generate PDF Report
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if video.processing_status in ['pending', 'processing'] %}
+<script>
+  pollVideoStatus({{ video.id }});
+</script>
+{% endif %}
+{% endblock %}

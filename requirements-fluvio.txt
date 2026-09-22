@@ -1,0 +1,10 @@
+# Optional: real Fluvio streaming for Mode 2 (Live CCTV).
+# This is a compiled Rust extension. Install this ONLY inside a Linux
+# environment (native Linux, macOS, or WSL2 on Windows) where a Rust
+# toolchain / prebuilt wheel is available. On plain Windows this will
+# fail with "error: can't find Rust compiler" — that's expected; the app
+# runs fine without it by falling back to direct (non-Fluvio) streaming.
+#
+# Install with:
+#   pip install -r requirements-fluvio.txt
+fluvio==0.21.0

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — StampedeGuard{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block page_sub %}User accounts and system-wide video activity{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="glass-card">
+      <h5 class="mb-3"><i class="bi bi-people me-2"></i>Registered Users</h5>
+      <div class="table-responsive">
+        <table class="table table-glass">
+          <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
+          <tbody>
+            {% for user in users %}
+            <tr>
+              <td>{{ user.username }}</td>
+              <td class="text-muted-soft">{{ user.email }}</td>
+              <td><span class="risk-badge {{ 'risk-CRITICAL' if user.role == 'admin' else 'risk-SAFE' }}">{{ user.role|upper }}</span></td>
+              <td class="text-muted-soft mono">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="glass-card">
+      <h5 class="mb-3"><i class="bi bi-camera-video me-2"></i>All Videos</h5>
+      <div class="table-responsive">
+        <table class="table table-glass">
+          <thead><tr><th>File</th><th>Uploader</th><th>Status</th><th>Risk</th></tr></thead>
+          <tbody>
+            {% for video in videos %}
+            <tr>
+              <td>
+                <a href="{{ url_for('video_status', video_id=video.id) }}">{{ video.original_filename }}</a>
+              </td>
+              <td class="text-muted-soft">{{ video.uploaded_by.username }}</td>
+              <td class="text-muted-soft">{{ video.processing_status|upper }}</td>
+              <td>
+                {% if video.final_risk_level %}
+                  <span class="risk-badge risk-{{ video.final_risk_level }}">{{ video.final_risk_level }}</span>
+                {% else %}
+                  <span class="text-muted-soft small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
