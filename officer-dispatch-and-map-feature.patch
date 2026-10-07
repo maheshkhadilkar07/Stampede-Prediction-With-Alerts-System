@@ -1,0 +1,1740 @@
+diff --git a/app.py b/app.py
+index 310496a..5e70221 100644
+--- a/app.py
++++ b/app.py
+@@ -3,7 +3,8 @@ import os
+ import threading
+ import time
+ 
+-from utils.notifier import notify_admins_async
++from utils.notifier import notify_admins_async, notify_nearest_officer_async
++from utils.geo import find_nearest_officer
+ from utils.otp_service import (
+     generate_and_send_login_otp, verify_login_otp, seconds_until_resend_allowed,
+     generate_and_send_otp, verify_otp_code,
+@@ -20,9 +21,9 @@ from flask_login import (
+ 
+ import config
+ from database.database import db, init_db
+-from database.models import User, Video, Alert
++from database.models import User, Video, Alert, Officer
+ from database import history
+-from utils.forms import LoginForm, RegisterForm, UploadVideoForm
++from utils.forms import LoginForm, RegisterForm, UploadVideoForm, OfficerForm
+ from utils.helpers import (
+     allowed_video_file, generate_unique_filename,
+     safe_join_upload_path, safe_join_processed_path,
+@@ -72,11 +73,19 @@ def _live_alert_callback(level: str, message: str) -> None:
+         video = db.session.get(Video, live_manager.video_id)
+         if video is None:
+             return
+-        alert = Alert(video_id=video.id, risk_level=level, message=message)
++        alert = Alert(
++            video_id=video.id,
++            risk_level=level,
++            message=message,
++            zone_name=video.zone_name,
++            latitude=video.latitude,
++            longitude=video.longitude,
++        )
+         db.session.add(alert)
+         db.session.commit()
+         logger.warning(f"LIVE ALERT [{level}] video_id={video.id}: {message}")
+         notify_admins_async(video.id, level, message)
++        notify_nearest_officer_async(alert.id)
+ 
+ 
+ live_manager.on_alert = _live_alert_callback
+@@ -345,6 +354,9 @@ def upload_video():
+             stored_filename=stored_filename,
+             source_type="upload",
+             processing_status="pending",
++            zone_name=(form.zone_name.data or "").strip() or None,
++            latitude=form.latitude.data,
++            longitude=form.longitude.data,
+         )
+         db.session.add(video)
+         db.session.commit()
+@@ -393,7 +405,7 @@ def _process_video_job(video_id: int, input_path: str) -> None:
+             video.processing_status = "completed"
+             db.session.commit()
+ 
+-            history.create_alerts_from_timeline(video)
++            new_alerts = history.create_alerts_from_timeline(video)
+             logger.info(f"Video {video_id} processed successfully.")
+ 
+             if video.final_risk_level in config.ALERT_NOTIFY_LEVELS:
+@@ -401,6 +413,10 @@ def _process_video_job(video_id: int, input_path: str) -> None:
+                     video.id, video.final_risk_level,
+                     "Critical crowd risk detected in uploaded video analysis.",
+                 )
++                # Dispatch the nearest on-duty officer to the last (most
++                # severe / most recent) geotagged alert from this video.
++                if new_alerts:
++                    notify_nearest_officer_async(new_alerts[-1].id)
+ 
+         except Exception as exc:  
+             logger.exception(f"Video {video_id} processing failed: {exc}")
+@@ -506,13 +522,24 @@ def live_start():
+         flash("Unknown camera source type.", "danger")
+         return redirect(url_for("live_view"))
+ 
+-   
++    zone_name = request.form.get("zone_name", "").strip() or None
++    lat_raw = request.form.get("latitude", "").strip()
++    lon_raw = request.form.get("longitude", "").strip()
++    try:
++        latitude = float(lat_raw) if lat_raw else None
++        longitude = float(lon_raw) if lon_raw else None
++    except ValueError:
++        latitude = longitude = None
++
+     video = Video(
+         user_id=current_user.id,
+         original_filename=f"Live CCTV ({source_type})",
+         stored_filename=f"live_{int(time.time())}",
+         source_type="cctv",
+         processing_status="processing",
++        zone_name=zone_name,
++        latitude=latitude,
++        longitude=longitude,
+     )
+     db.session.add(video)
+     db.session.commit()
+@@ -597,6 +624,122 @@ def alerts():
+     return render_template("alerts.html", alerts=alert_rows)
+ 
+ 
++@app.route("/api/alerts/map")
++@login_required
++def api_alerts_map():
++    """
++    JSON feed for the live situation map on templates/alerts.html:
++    every recent geotagged alert, its risk level, and (if one was
++    auto-dispatched) the nearest officer's own last-known location.
++    """
++    alert_rows = history.get_recent_alerts(limit=100)
++    features = []
++    for a in alert_rows:
++        if a.latitude is None or a.longitude is None:
++            continue
++        officer = None
++        if a.dispatched_officer is not None:
++            o = a.dispatched_officer
++            officer = {
++                "id": o.id,
++                "name": o.name,
++                "phone_number": o.phone_number,
++                "latitude": o.latitude,
++                "longitude": o.longitude,
++                "distance_km": a.dispatched_distance_km,
++            }
++        features.append({
++            "id": a.id,
++            "risk_level": a.risk_level,
++            "message": a.message,
++            "zone_name": a.zone_name,
++            "latitude": a.latitude,
++            "longitude": a.longitude,
++            "created_at": a.created_at.strftime("%Y-%m-%d %H:%M:%S"),
++            "acknowledged": a.acknowledged,
++            "officer": officer,
++        })
++    return jsonify(features)
++
++
++# ---------------------------------------------------------------------------
++# OFFICERS (nearest-officer dispatch roster)
++# ---------------------------------------------------------------------------
++@app.route("/officers", methods=["GET", "POST"])
++@login_required
++def manage_officers():
++    if not current_user.is_admin:
++        flash("Admin access required.", "danger")
++        return redirect(url_for("dashboard"))
++
++    form = OfficerForm()
++    if form.validate_on_submit():
++        officer = Officer(
++            name=form.name.data.strip(),
++            badge_id=(form.badge_id.data or "").strip() or None,
++            phone_number=(form.phone_number.data or "").strip() or None,
++            email=(form.email.data or "").strip() or None,
++            zone_name=(form.zone_name.data or "").strip() or None,
++            latitude=form.latitude.data,
++            longitude=form.longitude.data,
++            on_duty=form.on_duty.data,
++        )
++        db.session.add(officer)
++        db.session.commit()
++        flash(f"Officer '{officer.name}' added.", "success")
++        return redirect(url_for("manage_officers"))
++
++    officers = Officer.query.order_by(Officer.on_duty.desc(), Officer.name).all()
++    return render_template("officers.html", form=form, officers=officers)
++
++
++@app.route("/officers/<int:officer_id>/toggle-duty", methods=["POST"])
++@login_required
++def toggle_officer_duty(officer_id):
++    if not current_user.is_admin:
++        abort(403)
++    officer = db.session.get(Officer, officer_id)
++    if officer is None:
++        abort(404)
++    officer.on_duty = not officer.on_duty
++    db.session.commit()
++    flash(f"{officer.name} marked {'on-duty' if officer.on_duty else 'off-duty'}.", "info")
++    return redirect(url_for("manage_officers"))
++
++
++@app.route("/officers/<int:officer_id>/delete", methods=["POST"])
++@login_required
++def delete_officer(officer_id):
++    if not current_user.is_admin:
++        abort(403)
++    officer = db.session.get(Officer, officer_id)
++    if officer is not None:
++        db.session.delete(officer)
++        db.session.commit()
++        flash("Officer removed.", "info")
++    return redirect(url_for("manage_officers"))
++
++
++@app.route("/api/officers")
++@login_required
++def api_officers():
++    """JSON feed of all officers with a known location, for map markers."""
++    officers = Officer.query.filter(
++        Officer.latitude.isnot(None), Officer.longitude.isnot(None)
++    ).all()
++    return jsonify([
++        {
++            "id": o.id,
++            "name": o.name,
++            "zone_name": o.zone_name,
++            "latitude": o.latitude,
++            "longitude": o.longitude,
++            "on_duty": o.on_duty,
++        }
++        for o in officers
++    ])
++
++
+ # ---------------------------------------------------------------------------
+ # ADMIN PANEL
+ # ---------------------------------------------------------------------------
+diff --git a/database/database.py b/database/database.py
+index e938ef3..4506faa 100644
+--- a/database/database.py
++++ b/database/database.py
+@@ -15,15 +15,60 @@ Save this file at: Stampede-Prediction-System/database/database.py
+ """
+ 
+ from flask_sqlalchemy import SQLAlchemy
++from sqlalchemy import inspect, text
+ 
+ # Single SQLAlchemy instance, imported by models.py and app.py.
+ db = SQLAlchemy()
+ 
++# Columns added to already-existing tables after the initial release.
++# db.create_all() only creates *missing tables*, it never alters a table
++# that already exists — so anyone with a pre-existing stampede.db (e.g.
++# from before the officer-dispatch / zone-map feature) would otherwise
++# hit "no such column" errors. This runs a tiny, additive, SQLite-only
++# migration on startup instead of requiring Alembic for one release.
++_NEW_COLUMNS = {
++    "videos": [
++        ("zone_name", "VARCHAR(120)"),
++        ("latitude", "FLOAT"),
++        ("longitude", "FLOAT"),
++    ],
++    "alerts": [
++        ("zone_name", "VARCHAR(120)"),
++        ("latitude", "FLOAT"),
++        ("longitude", "FLOAT"),
++        ("dispatched_officer_id", "INTEGER"),
++        ("dispatched_distance_km", "FLOAT"),
++        ("dispatched_at", "DATETIME"),
++    ],
++}
++
++
++def _run_additive_migration(app):
++    """Add any missing columns from _NEW_COLUMNS to their tables in-place."""
++    engine = db.engine
++    if engine.dialect.name != "sqlite":
++        # Non-SQLite deployments (e.g. MySQL) should use a real migration
++        # tool; this shortcut is only safe for the bundled SQLite file.
++        return
++
++    inspector = inspect(engine)
++    existing_tables = set(inspector.get_table_names())
++
++    with engine.begin() as conn:
++        for table, columns in _NEW_COLUMNS.items():
++            if table not in existing_tables:
++                continue  # table doesn't exist yet, create_all() just made it fresh with all columns
++            existing_columns = {col["name"] for col in inspector.get_columns(table)}
++            for col_name, col_type in columns:
++                if col_name not in existing_columns:
++                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col_name} {col_type}"))
++
+ 
+ def init_db(app):
+     """
+-    Bind the SQLAlchemy instance to the Flask app and create all tables
+-    if they do not already exist. Called once from app.py's factory.
++    Bind the SQLAlchemy instance to the Flask app, create all tables
++    if they do not already exist, and patch any missing columns onto
++    tables that were created by an older version of this app.
+     """
+     db.init_app(app)
+     with app.app_context():
+@@ -31,3 +76,4 @@ def init_db(app):
+         # `db` before create_all() runs, without causing circular imports.
+         from database import models  # noqa: F401
+         db.create_all()
++        _run_additive_migration(app)
+diff --git a/database/history.py b/database/history.py
+index 29eb7cf..e1dc874 100644
+--- a/database/history.py
++++ b/database/history.py
+@@ -61,29 +61,42 @@ def get_recent_alerts(limit: int = 50):
+     return Alert.query.order_by(Alert.created_at.desc()).limit(limit).all()
+ 
+ 
+-def create_alerts_from_timeline(video: Video) -> None:
++def create_alerts_from_timeline(video: Video) -> list:
+     """
+     Scan a finished video's risk_timeline for HIGH/CRITICAL entries and
+     persist one Alert row per escalation into that zone (not one row per
+     second, otherwise a 30-second CRITICAL stretch would spam 30 alerts).
++
++    Each created Alert is geotagged with the video's registered
++    zone_name/latitude/longitude (if set) so it can be shown on the map
++    and used to dispatch the nearest on-duty officer. Returns the list of
++    newly created Alert objects (already committed).
+     """
+     import config
+ 
+     timeline = video.get_risk_timeline()
+     previous_level = None
++    new_alerts = []
+ 
+     for entry in timeline:
+         level = entry["level"]
+         if level in config.ALERT_TRIGGER_LEVELS and level != previous_level:
++            hotspot = entry.get("hotspot")
++            location_phrase = f" in the {hotspot}" if hotspot else ""
+             alert = Alert(
+                 video_id=video.id,
+                 risk_level=level,
+                 message=(
+-                    f"{level.title()} risk detected at "
++                    f"{level.title()} risk detected{location_phrase} at "
+                     f"{entry['second']}s into '{video.original_filename}'."
+                 ),
++                zone_name=video.zone_name,
++                latitude=video.latitude,
++                longitude=video.longitude,
+             )
+             db.session.add(alert)
++            new_alerts.append(alert)
+         previous_level = level
+ 
+     db.session.commit()
++    return new_alerts
+diff --git a/database/models.py b/database/models.py
+index 75a964c..c174927 100644
+--- a/database/models.py
++++ b/database/models.py
+@@ -68,6 +68,14 @@ class Video(db.Model):
+     processed_filename = db.Column(db.String(255), nullable=True)     # on-disk output name
+     source_type = db.Column(db.String(20), nullable=False, default="upload")  # 'upload' | 'cctv'
+ 
++    # Physical location of the camera/footage being monitored. Optional —
++    # when set, any Alert raised for this video is geotagged so it can be
++    # shown on the live situation map and used to dispatch the nearest
++    # on-duty officer.
++    zone_name = db.Column(db.String(120), nullable=True)
++    latitude = db.Column(db.Float, nullable=True)
++    longitude = db.Column(db.Float, nullable=True)
++
+     upload_time = db.Column(db.DateTime, default=datetime.utcnow)
+     processing_status = db.Column(db.String(20), nullable=False, default="pending")
+     # 'pending' | 'processing' | 'completed' | 'failed'
+@@ -113,9 +121,50 @@ class Alert(db.Model):
+     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+     acknowledged = db.Column(db.Boolean, default=False)
+ 
++    # Snapshot of the monitored location at the moment the alert fired
++    # (copied from Video.zone_name/latitude/longitude). Stored on the
++    # alert itself, not just looked up via video, so the map/history stays
++    # accurate even if the camera's registered location changes later.
++    zone_name = db.Column(db.String(120), nullable=True)
++    latitude = db.Column(db.Float, nullable=True)
++    longitude = db.Column(db.Float, nullable=True)
++
++    # Nearest on-duty officer that was automatically dispatched, if any.
++    dispatched_officer_id = db.Column(db.Integer, db.ForeignKey("officers.id"), nullable=True)
++    dispatched_distance_km = db.Column(db.Float, nullable=True)
++    dispatched_at = db.Column(db.DateTime, nullable=True)
++
++    dispatched_officer = db.relationship("Officer", backref="dispatches")
++
+     def __repr__(self):
+         return f"<Alert {self.risk_level} on video {self.video_id}>"
+ 
++
++class Officer(db.Model):
++    """
++    A field officer who can be dispatched to a stampede zone. Each officer
++    has a last-known location (latitude/longitude) so the system can find
++    the nearest on-duty officer to a given alert and notify them directly.
++    """
++
++    __tablename__ = "officers"
++
++    id = db.Column(db.Integer, primary_key=True)
++    name = db.Column(db.String(120), nullable=False)
++    badge_id = db.Column(db.String(40), nullable=True)
++    phone_number = db.Column(db.String(15), nullable=True)
++    email = db.Column(db.String(120), nullable=True)
++
++    zone_name = db.Column(db.String(120), nullable=True)   # human label, e.g. "Sector 4 - Gate 2"
++    latitude = db.Column(db.Float, nullable=True)
++    longitude = db.Column(db.Float, nullable=True)
++
++    on_duty = db.Column(db.Boolean, default=True, nullable=False)
++    created_at = db.Column(db.DateTime, default=datetime.utcnow)
++
++    def __repr__(self):
++        return f"<Officer {self.name} ({'on-duty' if self.on_duty else 'off-duty'})>"
++
+ class OtpCode(db.Model):
+     """
+     A one-time login verification code emailed to a user. Only the hash
+diff --git a/detector/density_estimator.py b/detector/density_estimator.py
+index a647e22..4019095 100644
+--- a/detector/density_estimator.py
++++ b/detector/density_estimator.py
+@@ -18,6 +18,30 @@ from utils.logger import get_logger
+ logger = get_logger(__name__)
+ 
+ 
++def describe_hotspot(grid) -> str:
++    """
++    Turn the density grid's single most-crowded cell into a short,
++    human-readable position within the camera's field of view (e.g.
++    "north-east area of frame"). This is what lets an alert message say
++    *where in the shot* the danger is building, not just "somewhere".
++
++    Returns None if there is no grid or every cell is empty.
++    """
++    if grid is None or grid.size == 0 or grid.max() == 0:
++        return None
++
++    rows, cols = grid.shape
++    row, col = np.unravel_index(int(np.argmax(grid)), grid.shape)
++
++    v_pos = "north" if row < rows / 3 else ("south" if row >= 2 * rows / 3 else "")
++    h_pos = "west" if col < cols / 3 else ("east" if col >= 2 * cols / 3 else "")
++
++    if not v_pos and not h_pos:
++        return "center of frame"
++    label = "-".join(p for p in (v_pos, h_pos) if p)
++    return f"{label} area of frame"
++
++
+ class DensityEstimator:
+     """
+     Computes a grid-based density map from a list of Detection objects
+diff --git a/detector/risk_analyzer.py b/detector/risk_analyzer.py
+index 428c559..3904643 100644
+--- a/detector/risk_analyzer.py
++++ b/detector/risk_analyzer.py
+@@ -14,6 +14,7 @@ Save this file at: Stampede-Prediction-System/detector/risk_analyzer.py
+ """
+ 
+ import config
++from detector.density_estimator import describe_hotspot
+ from utils.logger import get_logger
+ 
+ logger = get_logger(__name__)
+@@ -84,4 +85,8 @@ class RiskAnalyzer:
+             "color": info["color"],
+             "reason": "; ".join(reason_parts),
+             "escalated_by_surge": escalated,
++            # Where in the camera's frame the crowding is worst — see
++            # detector.density_estimator.describe_hotspot(). None if the
++            # frame is empty (SAFE, nobody detected).
++            "hotspot_label": describe_hotspot(density_result.get("grid")),
+         }
+diff --git a/detector/video_processor.py b/detector/video_processor.py
+index e47de65..8b3989e 100644
+--- a/detector/video_processor.py
++++ b/detector/video_processor.py
+@@ -139,6 +139,7 @@ class VideoProcessor:
+                     "second": current_second,
+                     "level": last_risk_result["level"],
+                     "count": last_density_result["total_count"],
++                    "hotspot": last_risk_result.get("hotspot_label"),
+                 })
+ 
+             # Apply heatmap overlay, then bounding boxes + stats panel.
+diff --git a/scripts/__init__.py b/scripts/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/scripts/seed_officers.py b/scripts/seed_officers.py
+new file mode 100644
+index 0000000..2b8bbfa
+--- /dev/null
++++ b/scripts/seed_officers.py
+@@ -0,0 +1,76 @@
++"""
++scripts/seed_officers.py
++==========================
++One-off helper to seed a handful of demo officers around Nagpur so the
++nearest-officer dispatch feature has something to find without needing
++to click through the /officers admin form first.
++
++Usage (from the project root, with your virtualenv active):
++    python -m scripts.seed_officers
++
++Safe to run more than once — it skips any officer whose name already
++exists in the database.
++"""
++
++from app import app
++from database.database import db
++from database.models import Officer
++
++DEMO_OFFICERS = [
++    {
++        "name": "Head Constable R. Mokati",
++        "badge_id": "NG-1042",
++        "phone_number": "919800000001",
++        "email": "r.mokati@example-police.gov.in",
++        "zone_name": "Main Gate - Sector 4",
++        "latitude": 21.1466,
++        "longitude": 79.0882,
++        "on_duty": True,
++    },
++    {
++        "name": "Constable K. Vighre",
++        "badge_id": "NG-1077",
++        "phone_number": "919800000002",
++        "email": "k.vighre@example-police.gov.in",
++        "zone_name": "East Concourse",
++        "latitude": 21.1502,
++        "longitude": 79.0947,
++        "on_duty": True,
++    },
++    {
++        "name": "Constable G. Tong",
++        "badge_id": "NG-1103",
++        "phone_number": "919800000003",
++        "email": "g.tong@example-police.gov.in",
++        "zone_name": "West Parking Ground",
++        "latitude": 21.1390,
++        "longitude": 79.0790,
++        "on_duty": True,
++    },
++    {
++        "name": "Constable Y. Yadav",
++        "badge_id": "NG-1128",
++        "phone_number": "919800000004",
++        "email": "y.yadav@example-police.gov.in",
++        "zone_name": "North Watchtower",
++        "latitude": 21.1610,
++        "longitude": 79.0850,
++        "on_duty": False,  # example of an off-duty officer, excluded from dispatch
++    },
++]
++
++
++def run():
++    with app.app_context():
++        created = 0
++        for data in DEMO_OFFICERS:
++            if Officer.query.filter_by(name=data["name"]).first():
++                continue
++            db.session.add(Officer(**data))
++            created += 1
++        db.session.commit()
++        print(f"Seeded {created} officer(s). {Officer.query.count()} total in roster.")
++
++
++if __name__ == "__main__":
++    run()
+diff --git a/static/css/style.css b/static/css/style.css
+index 62c4e6a..22ce430 100644
+--- a/static/css/style.css
++++ b/static/css/style.css
+@@ -359,3 +359,51 @@ a:hover { color: var(--accent-violet); }
+   .sidebar { display: none; }
+   .main-content { padding: 20px; }
+ }
++
++/* ---------------------------------------------------------------------
++   LIVE SITUATION MAP (Leaflet) — stampede zone + nearest-officer dispatch
++   --------------------------------------------------------------------- */
++.stampede-map {
++  width: 100%;
++  height: 380px;
++  border-radius: 14px;
++  border: 1px solid var(--border-glass);
++  overflow: hidden;
++  z-index: 0;
++}
++
++.stampede-map.picker-map {
++  height: 260px;
++}
++
++.map-legend {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 14px;
++  margin-top: 10px;
++  font-size: 0.8rem;
++  color: var(--text-muted);
++}
++
++.map-legend .dot {
++  display: inline-block;
++  width: 10px;
++  height: 10px;
++  border-radius: 50%;
++  margin-right: 6px;
++  vertical-align: middle;
++}
++
++.leaflet-popup-content-wrapper, .leaflet-popup-tip {
++  background: var(--bg-panel-solid);
++  color: var(--text-primary);
++  border: 1px solid var(--border-glass);
++}
++
++.leaflet-popup-content { font-size: 0.85rem; min-width: 180px; }
++.leaflet-popup-content b { color: var(--text-primary); }
++
++.officer-row-distance {
++  font-size: 0.78rem;
++  color: var(--accent-cyan);
++}
+diff --git a/static/js/map.js b/static/js/map.js
+new file mode 100644
+index 0000000..c0941db
+--- /dev/null
++++ b/static/js/map.js
+@@ -0,0 +1,178 @@
++/**
++ * static/js/map.js
++ * ==================
++ * Two small, dependency-free (beyond Leaflet, loaded via CDN in base.html
++ * templates that need it) helpers used across the "zone of stampede" /
++ * officer-dispatch feature:
++ *
++ *   initStampedeMap(mapElementId, alertsApiUrl, officersApiUrl)
++ *     -> renders the live situation map on the Alerts page: one marker
++ *        per geotagged alert (colored by risk level) plus a marker for
++ *        the officer dispatched to it, joined by a dashed line.
++ *
++ *   initLocationPicker(mapElementId, latInputId, lonInputId, opts)
++ *     -> a click-to-place-a-pin map used on Upload / Live CCTV / Officers
++ *        forms so a location can be set without typing raw coordinates.
++ */
++
++const RISK_COLORS = {
++  SAFE: "#28a745",
++  LOW: "#ffc107",
++  MEDIUM: "#fd7e14",
++  HIGH: "#dc3545",
++  CRITICAL: "#7d0d1b",
++};
++
++const MAP_TILE_URL = "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
++const MAP_TILE_ATTRIBUTION =
++  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
++const DEFAULT_CENTER = [21.1458, 79.0882]; // Nagpur, India — sensible fallback if nothing is geotagged yet
++
++function riskColor(level) {
++  return RISK_COLORS[level] || "#38bdf8";
++}
++
++function zoneIcon(color) {
++  return L.divIcon({
++    className: "",
++    html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};
++            box-shadow:0 0 0 4px ${color}33, 0 0 10px ${color}aa;border:2px solid #fff;"></div>`,
++    iconSize: [16, 16],
++    iconAnchor: [8, 8],
++  });
++}
++
++function officerIcon() {
++  return L.divIcon({
++    className: "",
++    html: `<div style="width:14px;height:14px;border-radius:3px;background:#38bdf8;
++            border:2px solid #fff;box-shadow:0 0 8px #38bdf8aa;"></div>`,
++    iconSize: [14, 14],
++    iconAnchor: [7, 7],
++  });
++}
++
++/** Live situation map: alert zones + dispatched officers. */
++function initStampedeMap(mapElementId, alertsApiUrl, officersApiUrl) {
++  const el = document.getElementById(mapElementId);
++  if (!el || typeof L === "undefined") return;
++
++  const map = L.map(mapElementId, { scrollWheelZoom: false }).setView(DEFAULT_CENTER, 12);
++  L.tileLayer(MAP_TILE_URL, { attribution: MAP_TILE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
++
++  function render() {
++    fetch(alertsApiUrl)
++      .then((r) => r.json())
++      .then((alertsData) => {
++        const bounds = [];
++        const layer = L.layerGroup().addTo(map);
++
++        alertsData.forEach((a) => {
++          const color = riskColor(a.risk_level);
++          const zoneMarker = L.marker([a.latitude, a.longitude], { icon: zoneIcon(color) }).addTo(layer);
++          zoneMarker.bindPopup(
++            `<b>${a.zone_name || "Unnamed zone"}</b><br>` +
++              `<span style="color:${color}">${a.risk_level}</span> — ${a.message}<br>` +
++              `<span style="opacity:.7">${a.created_at}</span>`
++          );
++          bounds.push([a.latitude, a.longitude]);
++
++          if (a.officer && a.officer.latitude != null && a.officer.longitude != null) {
++            const officerMarker = L.marker([a.officer.latitude, a.officer.longitude], {
++              icon: officerIcon(),
++            }).addTo(layer);
++            officerMarker.bindPopup(
++              `<b>${a.officer.name}</b> (dispatched)<br>` +
++                `${a.officer.distance_km != null ? a.officer.distance_km + " km from zone" : ""}<br>` +
++                `${a.officer.phone_number ? "📞 " + a.officer.phone_number : ""}`
++            );
++            L.polyline(
++              [
++                [a.officer.latitude, a.officer.longitude],
++                [a.latitude, a.longitude],
++              ],
++              { color: "#38bdf8", weight: 2, dashArray: "6 6", opacity: 0.8 }
++            ).addTo(layer);
++            bounds.push([a.officer.latitude, a.officer.longitude]);
++          }
++        });
++
++        if (officersApiUrl) {
++          fetch(officersApiUrl)
++            .then((r) => r.json())
++            .then((officers) => {
++              officers.forEach((o) => {
++                if (!o.on_duty) return;
++                L.circleMarker([o.latitude, o.longitude], {
++                  radius: 5,
++                  color: "#818cf8",
++                  fillColor: "#818cf8",
++                  fillOpacity: 0.6,
++                })
++                  .addTo(layer)
++                  .bindPopup(`<b>${o.name}</b><br>${o.zone_name || "On patrol"}<br>On duty`);
++              });
++            })
++            .catch(() => {});
++        }
++
++        if (bounds.length) {
++          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
++        }
++      })
++      .catch(() => {});
++  }
++
++  render();
++  return map;
++}
++
++/** Click-to-place-a-pin picker used on Upload / Live CCTV / Officers forms. */
++function initLocationPicker(mapElementId, latInputId, lonInputId, opts) {
++  opts = opts || {};
++  const el = document.getElementById(mapElementId);
++  const latInput = document.getElementById(latInputId);
++  const lonInput = document.getElementById(lonInputId);
++  if (!el || !latInput || !lonInput || typeof L === "undefined") return;
++
++  const initialLat = parseFloat(latInput.value);
++  const initialLon = parseFloat(lonInput.value);
++  const hasInitial = !isNaN(initialLat) && !isNaN(initialLon);
++  const startCenter = hasInitial ? [initialLat, initialLon] : DEFAULT_CENTER;
++
++  const map = L.map(mapElementId, { scrollWheelZoom: false }).setView(startCenter, hasInitial ? 15 : 12);
++  L.tileLayer(MAP_TILE_URL, { attribution: MAP_TILE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
++
++  let marker = hasInitial ? L.marker(startCenter, { draggable: true }).addTo(map) : null;
++
++  function setPoint(latlng) {
++    latInput.value = latlng.lat.toFixed(6);
++    lonInput.value = latlng.lng.toFixed(6);
++    if (marker) {
++      marker.setLatLng(latlng);
++    } else {
++      marker = L.marker(latlng, { draggable: true }).addTo(map);
++      marker.on("dragend", () => setPoint(marker.getLatLng()));
++    }
++  }
++
++  if (marker) {
++    marker.on("dragend", () => setPoint(marker.getLatLng()));
++  }
++
++  map.on("click", (e) => setPoint(e.latlng));
++
++  // Try to center on the browser's current location for convenience,
++  // but never overwrite a location the record already has.
++  if (!hasInitial && opts.geolocate !== false && navigator.geolocation) {
++    navigator.geolocation.getCurrentPosition(
++      (pos) => {
++        map.setView([pos.coords.latitude, pos.coords.longitude], 14);
++      },
++      () => {},
++      { timeout: 4000 }
++    );
++  }
++
++  return map;
++}
+diff --git a/streaming/stream_manager.py b/streaming/stream_manager.py
+index fbfb9fc..9a6a0b0 100644
+--- a/streaming/stream_manager.py
++++ b/streaming/stream_manager.py
+@@ -307,7 +307,9 @@ class LiveStreamManager:
+         cooldown_elapsed = (now - self._last_alert_time) >= config.LIVE_ALERT_COOLDOWN_SECONDS
+ 
+         if (level_changed or cooldown_elapsed) and self.on_alert is not None:
+-            self.on_alert(level, f"{risk_result['label']} risk detected on live CCTV feed.")
++            hotspot = risk_result.get("hotspot_label")
++            location_phrase = f" in the {hotspot}" if hotspot else ""
++            self.on_alert(level, f"{risk_result['label']} risk detected{location_phrase} on live CCTV feed.")
+             self._last_alert_level = level
+             self._last_alert_time = now
+ 
+diff --git a/templates/alerts.html b/templates/alerts.html
+index c5f02ee..41e7d9c 100644
+--- a/templates/alerts.html
++++ b/templates/alerts.html
+@@ -4,6 +4,23 @@
+ {% block page_sub %}Every HIGH / CRITICAL risk event raised across all videos{% endblock %}
+ 
+ {% block content %}
++
++<div class="glass-card mb-3">
++  <h5 class="mb-1"><i class="bi bi-geo-alt me-2"></i>Live Situation Map</h5>
++  <p class="text-muted-soft small mb-3">
++    Stampede zones (colored by risk level) and the nearest on-duty officer auto-dispatched to each one.
++    Only alerts raised from a geotagged camera appear here — tag a camera's zone/location on the
++    Upload or Live CCTV page to enable this.
++  </p>
++  <div id="situation-map" class="stampede-map"></div>
++  <div class="map-legend">
++    <span><span class="dot" style="background:#dc3545;"></span>High risk zone</span>
++    <span><span class="dot" style="background:#7d0d1b;"></span>Critical risk zone</span>
++    <span><span class="dot" style="background:#38bdf8;"></span>Dispatched officer</span>
++    <span><span class="dot" style="background:#818cf8;"></span>Other on-duty officer</span>
++  </div>
++</div>
++
+ <div class="glass-card">
+   {% if alerts %}
+   <div class="table-responsive">
+@@ -14,6 +31,7 @@
+           <th>Video</th>
+           <th>Risk Level</th>
+           <th>Message</th>
++          <th>Nearest Officer</th>
+           <th>Status</th>
+         </tr>
+       </thead>
+@@ -25,9 +43,20 @@
+             <a href="{{ url_for('video_status', video_id=alert.video_id) }}">
+               {{ alert.video.original_filename }}
+             </a>
++            {% if alert.zone_name %}<br><span class="text-muted-soft small"><i class="bi bi-pin-map"></i> {{ alert.zone_name }}</span>{% endif %}
+           </td>
+           <td><span class="risk-badge risk-{{ alert.risk_level }}">{{ alert.risk_level }}</span></td>
+           <td>{{ alert.message }}</td>
++          <td>
++            {% if alert.dispatched_officer %}
++              <div>{{ alert.dispatched_officer.name }}</div>
++              <div class="officer-row-distance">{{ "%.2f"|format(alert.dispatched_distance_km) }} km away</div>
++            {% elif alert.latitude is not none %}
++              <span class="text-muted-soft small">No on-duty officer available</span>
++            {% else %}
++              <span class="text-muted-soft small">Not geotagged</span>
++            {% endif %}
++          </td>
+           <td>
+             {% if alert.acknowledged %}
+               <span class="text-muted-soft small"><i class="bi bi-check2-circle me-1"></i>Acknowledged</span>
+@@ -45,3 +74,17 @@
+   {% endif %}
+ </div>
+ {% endblock %}
++
++{% block extra_head %}
++<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
++{% endblock %}
++
++{% block extra_scripts %}
++<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
++<script src="{{ url_for('static', filename='js/map.js') }}"></script>
++<script>
++  document.addEventListener("DOMContentLoaded", function () {
++    initStampedeMap("situation-map", "{{ url_for('api_alerts_map') }}", "{{ url_for('api_officers') }}");
++  });
++</script>
++{% endblock %}
+diff --git a/templates/base.html b/templates/base.html
+index 9d1fb97..9a18741 100644
+--- a/templates/base.html
++++ b/templates/base.html
+@@ -38,6 +38,9 @@
+         <i class="bi bi-bell"></i> Alerts
+       </a>
+       {% if current_user.is_admin %}
++      <a class="nav-link {% if request.endpoint == 'manage_officers' %}active{% endif %}" href="{{ url_for('manage_officers') }}">
++        <i class="bi bi-geo-alt"></i> Officers
++      </a>
+       <a class="nav-link {% if request.endpoint == 'admin_panel' %}active{% endif %}" href="{{ url_for('admin_panel') }}">
+         <i class="bi bi-person-gear"></i> Admin Panel
+       </a>
+diff --git a/templates/live_view.html b/templates/live_view.html
+index 59378db..7c7ec59 100644
+--- a/templates/live_view.html
++++ b/templates/live_view.html
+@@ -7,278 +7,156 @@
+ 
+ <div class="row g-4">
+ 
+-    <!-- LEFT SIDE -->
+-    <div class="col-lg-8">
+-
+-        <div class="glass-card mb-3">
+-
+-            {% if is_running %}
+-
+-                <img
+-                    id="live-feed-img"
+-                    src="{{ url_for('live_feed') }}"
+-                    class="video-frame w-100"
+-                    alt="Live Feed">
+-
+-            {% else %}
+-
+-                <div class="text-center py-5">
+-
+-                    <i class="bi bi-camera-video-off"
+-                       style="font-size:70px;"></i>
+-
+-                    <h5 class="mt-3">
+-                        No Live Camera Running
+-                    </h5>
+-
+-                    <p class="text-muted">
+-                        Select a camera source and click
+-                        <b>Start Live Session</b>.
+-                    </p>
+-
+-                </div>
+-
+-            {% endif %}
+-
++  <!-- LEFT SIDE -->
++  <div class="col-lg-8">
++
++    <div class="glass-card mb-3">
++      {% if is_running %}
++        <img id="live-feed-img" src="{{ url_for('live_feed') }}" class="video-frame w-100" alt="Live Feed">
++      {% else %}
++        <div class="text-center py-5">
++          <i class="bi bi-camera-video-off" style="font-size:70px;"></i>
++          <h5 class="mt-3">No Live Camera Running</h5>
++          <p class="text-muted">Select a camera source and click <b>Start Live Session</b>.</p>
+         </div>
++      {% endif %}
++    </div>
+ 
+-        {% if is_running %}
+-
+-        <div class="glass-card">
+-
+-            <div class="row text-center">
+-
+-                <div class="col-md-3">
+-
+-                    <h6>People</h6>
+-
+-                    <h3 id="live-person-count">0</h3>
+-
+-                </div>
+-
+-                <div class="col-md-3">
+-
+-                    <h6>Density</h6>
+-
+-                    <h3 id="live-density">0</h3>
+-
+-                </div>
+-
+-                <div class="col-md-3">
+-
+-                    <h6>Risk</h6>
+-
+-                    <span
+-                        id="live-risk-badge"
+-                        class="badge bg-success">
+-
+-                        SAFE
+-
+-                    </span>
+-
+-                </div>
+-
+-                <div class="col-md-3">
+-
+-                    <h6>FPS</h6>
+-
+-                    <h3 id="live-fps">0</h3>
+-
+-                </div>
+-
+-            </div>
+-
+-            <hr>
+-
+-            <div class="text-center">
+-
+-                <span
+-                    id="live-mode-badge"
+-                    class="badge {% if fluvio_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
+-
+-                    {{ "FLUVIO MODE" if fluvio_active else "DIRECT MODE" }}
+-
+-                </span>
+-
+-            </div>
+-
++    {% if is_running %}
++    <div class="glass-card">
++      <div class="row text-center">
++        <div class="col-md-3">
++          <h6>People</h6>
++          <h3 id="live-person-count">0</h3>
+         </div>
+-
+-        {% endif %}
+-
++        <div class="col-md-3">
++          <h6>Density</h6>
++          <h3 id="live-density">0</h3>
++        </div>
++        <div class="col-md-3">
++          <h6>Risk</h6>
++          <span id="live-risk-badge" class="badge bg-success">SAFE</span>
++        </div>
++        <div class="col-md-3">
++          <h6>FPS</h6>
++          <h3 id="live-fps">0</h3>
++        </div>
++      </div>
++      <hr>
++      <div class="text-center">
++        <span id="live-mode-badge" class="badge {% if fluvio_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
++          {{ "FLUVIO MODE" if fluvio_active else "DIRECT MODE" }}
++        </span>
++      </div>
+     </div>
++    {% endif %}
+ 
+-    <!-- RIGHT SIDE -->
+-
+-    <div class="col-lg-4">
+-
+-        <div class="glass-card">
+-
+-            <h5 class="mb-4">
+-
+-                <i class="bi bi-camera-video me-2"></i>
+-
+-                Camera Control
+-
+-            </h5>
+-
+-            {% if is_running %}
+-
+-            <div class="alert alert-success">
+-
+-                <b>Live Camera Running</b>
+-
+-                <br>
+-
+-                Source :
+-
+-                {{ source_type }}
+-
+-            </div>
+-
+-            <form method="POST"
+-                  action="{{ url_for('live_stop') }}">
+-
+-                <button
+-                    class="btn btn-danger w-100">
++  </div>
+ 
+-                    <i class="bi bi-stop-circle"></i>
++  <!-- RIGHT SIDE -->
++  <div class="col-lg-4">
+ 
+-                    Stop Live Session
+-
+-                </button>
+-
+-            </form>
+-
+-            {% else %}
+-
+-            <form method="POST"
+-                  action="{{ url_for('live_start') }}">
+-
+-                <div class="mb-3">
+-
+-                    <label class="form-label">
+-
+-                        Camera Source
+-
+-                    </label>
+-
+-                    <select
+-                        class="form-select"
+-                        id="cameraType"
+-                        name="source_type"
+-                        onchange="toggleSource()">
+-
+-                        <option value="webcam">
+-
+-                            💻 Laptop Webcam
+-
+-                        </option>
+-
+-                        <option value="ip">
+-
+-                            📱 Android Phone (IP Webcam)
+-
+-                        </option>
+-
+-                        <option value="rtsp">
+-
+-                            🎥 RTSP CCTV Camera
+-
+-                        </option>
+-
+-                    </select>
+-
+-                </div>
+-
+-                <div
+-                    id="urlBox"
+-                    style="display:none;">
+-
+-                    <label class="form-label">
+-
+-                        Camera URL
+-
+-                    </label>
+-
+-                    <input
+-                        type="text"
+-                        class="form-control"
+-                        name="source_url"
+-                        id="source_url"
+-                        placeholder="http://192.168.1.105:8080/video">
+-
+-                    <small class="text-muted">
+-
+-                        Example (Phone):
+-
+-                        http://192.168.1.105:8080/video
+-
+-                        <br>
+-
+-                        Example (RTSP):
+-
+-                        rtsp://username:password@192.168.1.10:554/stream
+-
+-                    </small>
+-
+-                </div>
+-
+-                <button
+-                    class="btn btn-primary w-100 mt-4">
+-
+-                    <i class="bi bi-play-circle"></i>
+-
+-                    Start Live Session
+-
+-                </button>
+-
+-            </form>
+-
+-            {% endif %}
++    <div class="glass-card">
++      <h5 class="mb-4"><i class="bi bi-camera-video me-2"></i>Camera Control</h5>
+ 
++      {% if is_running %}
++        <div class="alert alert-success">
++          <b>Live Camera Running</b><br>
++          Source : {{ source_type }}
+         </div>
++        <form method="POST" action="{{ url_for('live_stop') }}">
++          <button class="btn btn-danger w-100">
++            <i class="bi bi-stop-circle"></i> Stop Live Session
++          </button>
++        </form>
++      {% else %}
++        <form method="POST" action="{{ url_for('live_start') }}">
++          <div class="mb-3">
++            <label class="form-label">Camera Source</label>
++            <select class="form-select" id="cameraType" name="source_type" onchange="toggleSource()">
++              <option value="webcam">💻 Laptop Webcam</option>
++              <option value="ip">📱 Android Phone (IP Webcam)</option>
++              <option value="rtsp">🎥 RTSP CCTV Camera</option>
++            </select>
++          </div>
++
++          <div id="urlBox" style="display:none;">
++            <label class="form-label">Camera URL</label>
++            <input type="text" class="form-control" name="source_url" id="source_url"
++                   placeholder="http://192.168.1.105:8080/video">
++            <small class="text-muted">
++              Example (Phone): http://192.168.1.105:8080/video<br>
++              Example (RTSP): rtsp://username:password@192.168.1.10:554/stream
++            </small>
++          </div>
++
++          <hr style="border-color: var(--border-glass);">
++
++          <div class="mb-2">
++            <label class="form-label mb-0"><i class="bi bi-geo-alt me-1"></i>Camera Location <span class="text-muted-soft">(optional)</span></label>
++            <p class="text-muted-soft small mb-2">
++              Tag this camera's physical location so alerts raised from this session
++              show up on the live situation map and can dispatch the nearest officer.
++            </p>
++          </div>
++
++          <div class="mb-2">
++            <input type="text" class="form-control" name="zone_name" id="zone_name"
++                   placeholder="e.g. Main Entrance - Camera 3">
++          </div>
++
++          <div class="mb-2">
++            <div id="live-picker-map" class="stampede-map picker-map"></div>
++          </div>
++
++          <div class="row g-2 mb-3">
++            <div class="col-6">
++              <input type="text" class="form-control" name="latitude" id="live-lat" placeholder="Latitude" readonly>
++            </div>
++            <div class="col-6">
++              <input type="text" class="form-control" name="longitude" id="live-lon" placeholder="Longitude" readonly>
++            </div>
++          </div>
+ 
++          <button class="btn btn-primary w-100 mt-2">
++            <i class="bi bi-play-circle"></i> Start Live Session
++          </button>
++        </form>
++      {% endif %}
+     </div>
+ 
++  </div>
++
+ </div>
+ 
+ {% endblock %}
+ 
+-{% block extra_scripts %}
++{% block extra_head %}
++<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
++{% endblock %}
+ 
++{% block extra_scripts %}
+ {% if is_running %}
+-
+ <script>
+ pollLiveStatus();
+ </script>
+-
+ {% endif %}
+ 
+-<script>
++<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
++<script src="{{ url_for('static', filename='js/map.js') }}"></script>
+ 
++<script>
+ function toggleSource(){
+-
+-    let type=document.getElementById("cameraType").value;
+-
+-    let urlBox=document.getElementById("urlBox");
+-
+-    if(type==="webcam"){
+-
+-        urlBox.style.display="none";
+-
+-    }
+-
+-    else{
+-
+-        urlBox.style.display="block";
+-
+-    }
+-
++    let type = document.getElementById("cameraType").value;
++    let urlBox = document.getElementById("urlBox");
++    urlBox.style.display = (type === "webcam") ? "none" : "block";
+ }
+-
+ toggleSource();
+ 
++{% if not is_running %}
++document.addEventListener("DOMContentLoaded", function () {
++    initLocationPicker("live-picker-map", "live-lat", "live-lon");
++});
++{% endif %}
+ </script>
+-
+-{% endblock %}
+\ No newline at end of file
++{% endblock %}
+diff --git a/templates/officers.html b/templates/officers.html
+new file mode 100644
+index 0000000..11f501a
+--- /dev/null
++++ b/templates/officers.html
+@@ -0,0 +1,154 @@
++{% extends "base.html" %}
++{% block title %}Officers — StampedeGuard{% endblock %}
++{% block page_title %}Officer Roster{% endblock %}
++{% block page_sub %}Field officers eligible for automatic nearest-officer dispatch{% endblock %}
++
++{% block content %}
++<div class="row g-4">
++
++  <div class="col-lg-5">
++    <div class="glass-card">
++      <h5 class="mb-1"><i class="bi bi-person-plus me-2"></i>Add Officer</h5>
++      <p class="text-muted-soft small mb-3">
++        Click the map (or drag the pin) to set the officer's last-known location.
++        Only officers marked <b>On Duty</b> with a location are eligible for dispatch.
++      </p>
++
++      <form method="POST" novalidate>
++        {{ form.hidden_tag() }}
++
++        <div class="mb-3">
++          {{ form.name.label(class="form-label") }}
++          {{ form.name(class="form-control") }}
++          {% for error in form.name.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
++        </div>
++
++        <div class="row g-2 mb-3">
++          <div class="col-6">
++            {{ form.badge_id.label(class="form-label") }}
++            {{ form.badge_id(class="form-control") }}
++          </div>
++          <div class="col-6">
++            {{ form.phone_number.label(class="form-label") }}
++            {{ form.phone_number(class="form-control", placeholder="9198XXXXXXXX") }}
++          </div>
++        </div>
++
++        <div class="mb-3">
++          {{ form.email.label(class="form-label") }}
++          {{ form.email(class="form-control") }}
++          {% for error in form.email.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
++        </div>
++
++        <div class="mb-3">
++          {{ form.zone_name.label(class="form-label") }}
++          {{ form.zone_name(class="form-control", placeholder="e.g. Sector 4 - Gate 2") }}
++        </div>
++
++        <div class="mb-2">
++          <label class="form-label">Last-Known Location</label>
++          <div id="officer-picker-map" class="stampede-map picker-map"></div>
++        </div>
++
++        <div class="row g-2 mb-3">
++          <div class="col-6">
++            {{ form.latitude.label(class="form-label small") }}
++            {{ form.latitude(class="form-control", id="officer-lat") }}
++            {% for error in form.latitude.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
++          </div>
++          <div class="col-6">
++            {{ form.longitude.label(class="form-label small") }}
++            {{ form.longitude(class="form-control", id="officer-lon") }}
++            {% for error in form.longitude.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
++          </div>
++        </div>
++
++        <div class="form-check mb-4">
++          {{ form.on_duty(class="form-check-input") }}
++          {{ form.on_duty.label(class="form-check-label") }}
++        </div>
++
++        {{ form.submit(class="btn btn-gradient w-100") }}
++      </form>
++    </div>
++  </div>
++
++  <div class="col-lg-7">
++    <div class="glass-card">
++      <h5 class="mb-3"><i class="bi bi-people me-2"></i>Roster ({{ officers|length }})</h5>
++      {% if officers %}
++      <div class="table-responsive">
++        <table class="table table-glass">
++          <thead>
++            <tr>
++              <th>Name</th>
++              <th>Zone</th>
++              <th>Contact</th>
++              <th>Status</th>
++              <th></th>
++            </tr>
++          </thead>
++          <tbody>
++            {% for o in officers %}
++            <tr>
++              <td>{{ o.name }}{% if o.badge_id %} <span class="text-muted-soft small">#{{ o.badge_id }}</span>{% endif %}</td>
++              <td class="text-muted-soft">
++                {{ o.zone_name or "—" }}
++                {% if o.latitude is not none and o.longitude is not none %}
++                <br><span class="small mono text-muted-soft">{{ "%.4f"|format(o.latitude) }}, {{ "%.4f"|format(o.longitude) }}</span>
++                {% endif %}
++              </td>
++              <td class="text-muted-soft small">
++                {% if o.phone_number %}<i class="bi bi-telephone me-1"></i>{{ o.phone_number }}<br>{% endif %}
++                {% if o.email %}<i class="bi bi-envelope me-1"></i>{{ o.email }}{% endif %}
++              </td>
++              <td>
++                {% if o.on_duty %}
++                  <span class="risk-badge risk-SAFE">ON DUTY</span>
++                {% else %}
++                  <span class="risk-badge risk-MEDIUM">OFF DUTY</span>
++                {% endif %}
++              </td>
++              <td class="text-end">
++                <form method="POST" action="{{ url_for('toggle_officer_duty', officer_id=o.id) }}" class="d-inline">
++                  <button class="btn btn-sm btn-outline-light" title="Toggle duty status">
++                    <i class="bi bi-arrow-repeat"></i>
++                  </button>
++                </form>
++                <form method="POST" action="{{ url_for('delete_officer', officer_id=o.id) }}" class="d-inline"
++                      onsubmit="return confirm('Remove {{ o.name }} from the roster?');">
++                  <button class="btn btn-sm btn-outline-danger" title="Remove officer">
++                    <i class="bi bi-trash"></i>
++                  </button>
++                </form>
++              </td>
++            </tr>
++            {% endfor %}
++          </tbody>
++        </table>
++      </div>
++      {% else %}
++      <div class="text-muted-soft small">
++        No officers yet. Add one on the left — once an officer has a location and is
++        on duty, they become eligible for automatic nearest-officer dispatch.
++      </div>
++      {% endif %}
++    </div>
++  </div>
++
++</div>
++{% endblock %}
++
++{% block extra_head %}
++<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
++{% endblock %}
++
++{% block extra_scripts %}
++<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
++<script src="{{ url_for('static', filename='js/map.js') }}"></script>
++<script>
++  document.addEventListener("DOMContentLoaded", function () {
++    initLocationPicker("officer-picker-map", "officer-lat", "officer-lon");
++  });
++</script>
++{% endblock %}
+diff --git a/templates/upload.html b/templates/upload.html
+index 7927542..0827dbf 100644
+--- a/templates/upload.html
++++ b/templates/upload.html
+@@ -21,9 +21,55 @@
+           {% for error in form.video_file.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+         </div>
+ 
++        <hr style="border-color: var(--border-glass);">
++
++        <div class="mb-3">
++          <label class="form-label mb-0"><i class="bi bi-geo-alt me-1"></i>Camera Location <span class="text-muted-soft">(optional)</span></label>
++          <p class="text-muted-soft small mb-2">
++            Tag where this footage is from so any HIGH/CRITICAL alert it raises appears on the
++            live situation map and can auto-dispatch the nearest on-duty officer.
++          </p>
++        </div>
++
++        <div class="mb-3">
++          {{ form.zone_name.label(class="form-label small") }}
++          {{ form.zone_name(class="form-control", placeholder="e.g. Main Gate - Sector 4") }}
++        </div>
++
++        <div class="mb-2">
++          <div id="upload-picker-map" class="stampede-map picker-map"></div>
++        </div>
++
++        <div class="row g-2 mb-4">
++          <div class="col-6">
++            {{ form.latitude.label(class="form-label small") }}
++            {{ form.latitude(class="form-control", id="upload-lat") }}
++            {% for error in form.latitude.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
++          </div>
++          <div class="col-6">
++            {{ form.longitude.label(class="form-label small") }}
++            {{ form.longitude(class="form-control", id="upload-lon") }}
++            {% for error in form.longitude.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
++          </div>
++        </div>
++
+         {{ form.submit(class="btn btn-gradient") }}
+       </form>
+     </div>
+   </div>
+ </div>
+ {% endblock %}
++
++{% block extra_head %}
++<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
++{% endblock %}
++
++{% block extra_scripts %}
++<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
++<script src="{{ url_for('static', filename='js/map.js') }}"></script>
++<script>
++  document.addEventListener("DOMContentLoaded", function () {
++    initLocationPicker("upload-picker-map", "upload-lat", "upload-lon");
++  });
++</script>
++{% endblock %}
+diff --git a/utils/forms.py b/utils/forms.py
+index 65093ac..c1ede6c 100644
+--- a/utils/forms.py
++++ b/utils/forms.py
+@@ -10,8 +10,8 @@ Save this file at: Stampede-Prediction-System/utils/forms.py
+ 
+ from flask_wtf import FlaskForm
+ from flask_wtf.file import FileField, FileRequired, FileAllowed
+-from wtforms import StringField, PasswordField, SelectField, SubmitField
+-from wtforms.validators import DataRequired, Email, Length, EqualTo
++from wtforms import StringField, PasswordField, SelectField, SubmitField, FloatField, BooleanField
++from wtforms.validators import DataRequired, Email, Length, EqualTo, Optional, NumberRange
+ 
+ import config
+ 
+@@ -49,8 +49,33 @@ class UploadVideoForm(FlaskForm):
+             ),
+         ],
+     )
++    # Optional: tag this camera/footage with a physical location so any
++    # HIGH/CRITICAL alert it raises can be shown on the situation map and
++    # used to auto-dispatch the nearest on-duty officer.
++    zone_name = StringField(
++        "Zone / Location Name", validators=[Optional(), Length(max=120)]
++    )
++    latitude = FloatField(
++        "Latitude", validators=[Optional(), NumberRange(min=-90, max=90)]
++    )
++    longitude = FloatField(
++        "Longitude", validators=[Optional(), NumberRange(min=-180, max=180)]
++    )
+     submit = SubmitField("Upload & Analyze")
+ 
++
++class OfficerForm(FlaskForm):
++    name = StringField("Officer Name", validators=[DataRequired(), Length(max=120)])
++    badge_id = StringField("Badge / ID No.", validators=[Optional(), Length(max=40)])
++    phone_number = StringField("Phone Number", validators=[Optional(), Length(max=15)])
++    email = StringField("Email", validators=[Optional(), Email(), Length(max=120)])
++    zone_name = StringField("Assigned Zone / Beat", validators=[Optional(), Length(max=120)])
++    latitude = FloatField("Latitude", validators=[DataRequired(), NumberRange(min=-90, max=90)])
++    longitude = FloatField("Longitude", validators=[DataRequired(), NumberRange(min=-180, max=180)])
++    on_duty = BooleanField("Currently On Duty", default=True)
++    submit = SubmitField("Add Officer")
++
++
+ class OtpForm(FlaskForm):
+     code = StringField(
+         "Verification Code",
+diff --git a/utils/geo.py b/utils/geo.py
+new file mode 100644
+index 0000000..f1ccfa9
+--- /dev/null
++++ b/utils/geo.py
+@@ -0,0 +1,63 @@
++"""
++utils/geo.py
++=============
++Small geo-distance helpers used to map a stampede alert to a physical
++zone and find the nearest on-duty officer to dispatch to it.
++
++Deliberately dependency-free (plain math, no geopy/pyproj) since we only
++need "who is closest" over a handful of officer records, not
++survey-grade geodesy.
++
++Save this file at: Stampede-Prediction-System/utils/geo.py
++"""
++
++import math
++
++EARTH_RADIUS_KM = 6371.0
++
++
++def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
++    """Great-circle distance in kilometers between two lat/lon points."""
++    phi1, phi2 = math.radians(lat1), math.radians(lat2)
++    dphi = math.radians(lat2 - lat1)
++    dlambda = math.radians(lon2 - lon1)
++
++    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
++    a = min(1.0, max(0.0, a))  # guard against tiny float overshoot past domain
++    return 2 * EARTH_RADIUS_KM * math.asin(math.sqrt(a))
++
++
++def find_nearest_officer(latitude: float, longitude: float, on_duty_only: bool = True):
++    """
++    Find the on-duty Officer whose last-known location is closest to
++    (latitude, longitude).
++
++    Returns (officer, distance_km) or (None, None) if there is no
++    candidate officer with a known location.
++    """
++    # Local import avoids a circular import between database.models and
++    # anything that imports this module at startup.
++    from database.models import Officer
++
++    if latitude is None or longitude is None:
++        return None, None
++
++    query = Officer.query.filter(Officer.latitude.isnot(None), Officer.longitude.isnot(None))
++    if on_duty_only:
++        query = query.filter_by(on_duty=True)
++    candidates = query.all()
++
++    if not candidates:
++        return None, None
++
++    nearest = min(
++        candidates,
++        key=lambda o: haversine_km(latitude, longitude, o.latitude, o.longitude),
++    )
++    distance = round(haversine_km(latitude, longitude, nearest.latitude, nearest.longitude), 2)
++    return nearest, distance
++
++
++def maps_directions_url(latitude: float, longitude: float) -> str:
++    """A Google Maps 'directions to' link an officer can tap from a text/email alert."""
++    return f"https://www.google.com/maps/dir/?api=1&destination={latitude},{longitude}"
+diff --git a/utils/notifier.py b/utils/notifier.py
+index e4eb7e3..a08fb5a 100644
+--- a/utils/notifier.py
++++ b/utils/notifier.py
+@@ -76,6 +76,75 @@ def _send_email(subject, body, recipients):
+         logger.exception(f"Failed to send alert email: {exc}")
+ 
+ 
++def notify_nearest_officer_async(alert_id):
++    """Fire-and-forget: find and dispatch the nearest on-duty officer to alert_id."""
++    t = threading.Thread(target=_notify_nearest_officer, args=(alert_id,))
++    t.daemon = True
++    t.start()
++
++
++def _notify_nearest_officer(alert_id):
++    if not config.ADMIN_ALERT_ENABLED:
++        return
++
++    from datetime import datetime
++
++    from app import app  # local import — avoids circular import at module load
++    from database.database import db
++    from database.models import Alert
++    from utils.geo import find_nearest_officer, maps_directions_url
++
++    with app.app_context():
++        alert = db.session.get(Alert, alert_id)
++        if alert is None:
++            return
++        if alert.latitude is None or alert.longitude is None:
++            logger.info(
++                f"Alert {alert_id} has no known location — skipping officer dispatch "
++                f"(tag the video with a zone/latitude/longitude to enable this)."
++            )
++            return
++
++        officer, distance_km = find_nearest_officer(alert.latitude, alert.longitude)
++        if officer is None:
++            logger.warning(
++                f"No on-duty officer with a known location to dispatch for alert {alert_id}."
++            )
++            return
++
++        alert.dispatched_officer_id = officer.id
++        alert.dispatched_distance_km = distance_km
++        alert.dispatched_at = datetime.utcnow()
++        db.session.commit()
++
++        zone = alert.zone_name or "the monitored zone"
++        directions = maps_directions_url(alert.latitude, alert.longitude)
++        subject = f"[StampedeGuard] DISPATCH: {alert.risk_level} risk at {zone}"
++        body = (
++            f"You are the nearest on-duty officer ({distance_km} km away) to a "
++            f"{alert.risk_level} risk stampede alert.\n\n"
++            f"Zone: {zone}\n"
++            f"Details: {alert.message}\n"
++            f"Coordinates: {alert.latitude}, {alert.longitude}\n"
++            f"Directions: {directions}\n\n"
++            f"Please proceed to the location immediately."
++        )
++
++        if officer.email:
++            _send_email(subject, body, [officer.email])
++        if officer.phone_number:
++            _send_sms(
++                f"DISPATCH: {alert.risk_level} risk at {zone}, {distance_km}km from you. "
++                f"Directions: {directions}",
++                [officer.phone_number],
++            )
++
++        logger.warning(
++            f"Dispatched officer '{officer.name}' ({distance_km} km away) to alert {alert_id} "
++            f"[{alert.risk_level} @ {zone}]."
++        )
++
++
+ def _send_sms(text, phone_numbers):
+     if not config.FAST2SMS_API_KEY:
+         logger.warning("Fast2SMS not configured — skipping SMS alert.")
