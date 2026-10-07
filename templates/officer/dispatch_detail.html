@@ -1,0 +1,102 @@
+{% extends "officer/base.html" %}
+{% block title %}Assignment{% endblock %}
+
+{# Tells officer.js not to redirect this page to itself when polling finds
+   an active dispatch - we are already on the incident screen. #}
+{% block body_attrs %} data-dispatch-page="1"{% endblock %}
+
+{% block content %}
+
+  <section class="assignment">
+    <div class="assignment-head">
+      <div class="assignment-kicker">
+        {{ dispatch.risk_level|title }} crowd risk &middot; raised {{ dispatch.created_at|localtime('%H:%M') }}
+      </div>
+      <div class="assignment-name">{{ place.name }}</div>
+      {% if place.venue %}
+        <div class="destination-venue">{{ place.venue }}</div>
+      {% endif %}
+    </div>
+
+    <div class="assignment-meta">
+      <div>Coordinates <span class="num">{{ place.address }}</span></div>
+      {% if dispatch.accepted_by %}
+        <div>Assigned to <span>{{ dispatch.accepted_by.username }}</span></div>
+      {% endif %}
+      {% if dispatch.response_seconds is not none %}
+        <div>Accepted in <span class="num">{{ dispatch.response_seconds }}s</span></div>
+      {% endif %}
+      <div>{{ dispatch.message }}</div>
+    </div>
+
+    {# A stepped treatment is justified here in a way it would not be
+       elsewhere: the status genuinely IS an ordered sequence, and the
+       officer needs to see both where they are and what comes next. #}
+    <ol class="steps">
+      {% for step in steps %}
+        <li class="step {% if step.done %}done{% endif %} {% if step.current %}current{% endif %}">
+          <span class="step-mark" aria-hidden="true">{% if step.done %}&check;{% else %}{{ loop.index }}{% endif %}</span>
+          <span class="step-text">
+            {{ step.label }}
+            {% if step.at %}
+              <span class="step-time num">{{ step.at|localtime('%H:%M:%S') }}</span>
+            {% endif %}
+          </span>
+        </li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  {% if dispatch.status in ('CANCELLED', 'UNASSIGNED') %}
+    <div class="notice">
+      <strong>This incident is closed.</strong>
+      {{ dispatch.close_reason or 'No further action is needed.' }}
+    </div>
+  {% elif not is_mine %}
+    <div class="notice">
+      <strong>This assignment is not yours.</strong>
+      {% if dispatch.accepted_by %}
+        {{ dispatch.accepted_by.username }} is handling it.
+      {% else %}
+        Nobody is currently assigned.
+      {% endif %}
+    </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block actions %}
+  {# Navigation stays reachable at every stage, because an officer who is
+     already moving still needs it, and it is the one thing they should
+     never have to hunt for. #}
+  <div class="actions">
+    <div class="actions-inner">
+      {% if dispatch.status == 'RESOLVED' %}
+        <a class="btn btn-wide" href="{{ url_for('officer.home') }}">Back to standby</a>
+
+      {% elif not is_mine %}
+        <a class="btn btn-wide" href="{{ url_for('officer.home') }}">Back</a>
+
+      {% else %}
+        <a class="btn btn-navigate"
+           href="{{ navigate_url }}"
+           target="_blank"
+           rel="noopener noreferrer">Navigate</a>
+
+        {% if dispatch.status == 'ACCEPTED' %}
+          <button type="button" class="btn"
+                  data-status="EN_ROUTE"
+                  data-dispatch-id="{{ dispatch.id }}">On the way</button>
+        {% elif dispatch.status == 'EN_ROUTE' %}
+          <button type="button" class="btn"
+                  data-status="ARRIVED"
+                  data-dispatch-id="{{ dispatch.id }}">I've arrived</button>
+        {% elif dispatch.status == 'ARRIVED' %}
+          <button type="button" class="btn"
+                  data-status="RESOLVED"
+                  data-dispatch-id="{{ dispatch.id }}">Resolve</button>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

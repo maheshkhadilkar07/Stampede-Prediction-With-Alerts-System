@@ -1,0 +1,53 @@
+{
+  "name": "{{ site.name or 'StampedeGuard' }} Field Officer",
+  "short_name": "Dispatch",
+  "description": "Receive and accept crowd-incident assignments, and navigate to the scene.",
+
+  "start_url": "/officer/",
+  "scope": "/officer/",
+
+  "display": "standalone",
+  "orientation": "portrait",
+
+  "background_color": "#070c16",
+  "theme_color": "#070c16",
+
+  "icons": [
+    {
+      "src": "/static/icons/officer-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/icons/officer-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/officer-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/static/icons/officer-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/officer-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "My assignment log",
+      "url": "/officer/history"
+    }
+  ]
+}

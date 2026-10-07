@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Risk Map — StampedeGuard{% endblock %}
+{% block page_title %}Risk Map{% endblock %}
+{% block page_sub %}Live view of monitored locations by current risk level{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+      integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+  #risk-map { height: 600px; width: 100%; border-radius: 12px; }
+  .risk-legend {
+    display: flex; gap: 1.25rem; flex-wrap: wrap; align-items: center;
+    margin-top: 0.75rem; font-size: 0.85rem;
+  }
+  .risk-legend .swatch {
+    display: inline-block; width: 12px; height: 12px; border-radius: 50%;
+    margin-right: 0.4rem; vertical-align: middle;
+  }
+  .leaflet-popup-content b { font-size: 0.95rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div id="risk-map"></div>
+  <div class="risk-legend" id="risk-legend"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+        integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(function () {
+  const RISK_COLORS = {
+    SAFE: "#28a745", LOW: "#ffc107", MEDIUM: "#fd7e14",
+    HIGH: "#dc3545", CRITICAL: "#7d0d1b",
+  };
+
+  // Build the legend once.
+  const legendEl = document.getElementById("risk-legend");
+  Object.entries(RISK_COLORS).forEach(([level, color]) => {
+    const span = document.createElement("span");
+    span.innerHTML = `<span class="swatch" style="background:${color}"></span>${level}`;
+    legendEl.appendChild(span);
+  });
+
+  const map = L.map("risk-map").setView([20.5937, 78.9629], 5); // default: India-wide view
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+  }).addTo(map);
+
+  let markersLayer = L.layerGroup().addTo(map);
+  let hasFitBounds = false;
+
+  async function refreshMarkers() {
+    let data;
+    try {
+      const res = await fetch("/api/map/locations");
+      data = await res.json();
+    } catch (err) {
+      console.error("Failed to load map locations:", err);
+      return;
+    }
+
+    markersLayer.clearLayers();
+    const points = [];
+    const PROMINENT_LEVELS = ["HIGH", "CRITICAL"];
+
+    (data.locations || []).forEach((loc) => {
+      const color = loc.color || RISK_COLORS.SAFE;
+      const isProminent = PROMINENT_LEVELS.includes(loc.risk_level);
+
+      // For HIGH/CRITICAL, draw a larger translucent "halo" ring behind
+      // the main marker so these incidents visually stand out on the map.
+      if (isProminent) {
+        L.circleMarker([loc.latitude, loc.longitude], {
+          radius: 20, color: color, fillColor: color, fillOpacity: 0.18,
+          weight: 1, interactive: false,
+        }).addTo(markersLayer);
+      }
+
+      const marker = L.circleMarker([loc.latitude, loc.longitude], {
+        radius: loc.is_live ? 13 : (isProminent ? 11 : 9),
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.9,
+        weight: loc.is_live ? 3 : (isProminent ? 2.5 : 1.5),
+      });
+
+      const liveBadge = loc.is_live
+        ? '<span style="color:#dc3545;font-weight:600;">&#9679; LIVE</span><br>'
+        : "";
+
+      const timestamp = loc.upload_time ? new Date(loc.upload_time).toLocaleString() : "—";
+
+      let alertBlock = '<div class="text-muted-soft small mt-1">No alerts raised yet.</div>';
+      if (loc.alert) {
+        const alertTime = loc.alert.timestamp ? new Date(loc.alert.timestamp).toLocaleString() : "—";
+        const recipientLines = (loc.alert.recipients || []).map((r) => {
+          const icon = r.status === "sent" ? "✓" : (r.status === "failed" ? "✗" : "…");
+          const statusColor = r.status === "sent" ? "#28a745" : (r.status === "failed" ? "#dc3545" : "#ffc107");
+          return `<span style="color:${statusColor}">${icon} ${r.name} (${r.type}) — ${r.status}</span>`;
+        }).join("<br>");
+
+        alertBlock = `
+          <hr style="margin:6px 0;">
+          <b>Latest Alert:</b> ${loc.alert.risk_level} at ${alertTime}<br>
+          <span class="small">${loc.alert.sent_count} sent, ${loc.alert.failed_count} failed, ${loc.alert.pending_count} pending</span>
+          ${recipientLines ? `<div class="small mt-1">${recipientLines}</div>` : ""}
+        `;
+      }
+
+      marker.bindPopup(
+        `${liveBadge}<b>${loc.name}</b><br>` +
+        `Risk: <b style="color:${color}">${loc.risk_label}</b><br>` +
+        `People (current/peak): ${loc.person_count}<br>` +
+        `Density: ${loc.density} people/cell<br>` +
+        `Growth rate: ${(loc.growth_rate * 100).toFixed(1)}%<br>` +
+        `Source: ${loc.source_type} | Last updated: ${timestamp}` +
+        alertBlock +
+        `<div class="mt-2"><a href="${loc.detail_url}">View details &rarr;</a></div>`,
+        { maxWidth: 320 }
+      );
+
+      marker.addTo(markersLayer);
+      points.push([loc.latitude, loc.longitude]);
+    });
+
+    if (!hasFitBounds && points.length > 0) {
+      map.fitBounds(points, { padding: [40, 40], maxZoom: 14 });
+      hasFitBounds = true;
+    }
+  }
+
+  refreshMarkers();
+  setInterval(refreshMarkers, 5000); // keep live-session markers current
+})();
+</script>
+{% endblock %}

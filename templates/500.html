@@ -1,0 +1,10 @@
+{% extends "public_base.html" %}
+{% block title %}Something went wrong — {{ site.name }}{% endblock %}
+{% block content %}
+<section class="section"><div class="container text-center py-5">
+  <div class="display-1 fw-bold brand-font" style="color:var(--accent-blue);">500</div>
+  <h2 class="brand-font">Something went wrong</h2>
+  <p class="text-muted-soft">An unexpected error occurred. Please try again in a moment.</p>
+  <a href="{{ url_for('home') }}" class="btn btn-gradient">Back to home</a>
+</div></section>
+{% endblock %}

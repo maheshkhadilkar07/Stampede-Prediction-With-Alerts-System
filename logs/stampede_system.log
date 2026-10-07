@@ -1,0 +1,298 @@
+2026-09-21 03:27:58 | INFO     | utils.otp_service | Login OTP emailed to user_id=1.
+2026-09-21 03:27:58 | INFO     | app | Password OK for 'alice'; awaiting OTP verification.
+2026-09-21 03:27:58 | INFO     | app | User 'alice' completed 2FA and logged in.
+2026-09-21 03:28:09 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] Login OTP for user_id=1 ('bob'): 028745
+2026-09-21 03:28:09 | INFO     | app | Password OK for 'bob'; awaiting OTP verification.
+2026-09-21 03:28:18 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] Login OTP for user_id=1 ('bob'): 829050
+2026-09-21 03:28:18 | INFO     | app | Password OK for 'bob'; awaiting OTP verification.
+2026-09-21 03:28:26 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] Login OTP for user_id=1 ('bob'): 391677
+2026-09-21 03:28:26 | INFO     | app | Password OK for 'bob'; awaiting OTP verification.
+2026-09-21 03:59:21 | INFO     | app | New user registered (pending email verification): carol (user)
+2026-09-21 03:59:21 | INFO     | utils.otp_service | register OTP emailed to user_id=1.
+2026-09-21 03:59:37 | INFO     | app | New user registered (pending email verification): carol (user)
+2026-09-21 03:59:37 | INFO     | utils.otp_service | register OTP emailed to user_id=1.
+2026-09-21 03:59:37 | INFO     | utils.otp_service | register OTP emailed to user_id=1.
+2026-09-21 03:59:37 | INFO     | app | User 'carol' verified their email.
+2026-09-21 03:59:37 | INFO     | utils.otp_service | login OTP emailed to user_id=1.
+2026-09-21 03:59:37 | INFO     | app | Password OK for 'carol'; awaiting OTP verification.
+2026-09-21 03:59:37 | INFO     | app | User 'carol' completed 2FA and logged in.
+2026-09-22 09:50:52 | INFO     | app | User 'dave' logged in (2FA disabled).
+2026-09-22 09:51:03 | INFO     | app | User 'eve' logged in (2FA disabled).
+2026-09-22 09:51:03 | INFO     | app | Video uploaded: test.mp4 -> 20260922_095103_3707c8f9.mp4 (id=1)
+2026-09-22 09:51:03 | WARNING  | detector.person_detector | YOLO weights not found at /home/claude/Stampede-Prediction-System/trained_models/yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-09-22 09:51:03 | ERROR    | app | Video 1 processing failed: Could not open video file: /home/claude/Stampede-Prediction-System/videos/uploads/20260922_095103_3707c8f9.mp4
+Traceback (most recent call last):
+  File "/home/claude/Stampede-Prediction-System/app.py", line 448, in _process_video_job
+    result = processor.process(input_path, output_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/claude/Stampede-Prediction-System/detector/video_processor.py", line 98, in process
+    raise IOError(f"Could not open video file: {input_path}")
+OSError: Could not open video file: /home/claude/Stampede-Prediction-System/videos/uploads/20260922_095103_3707c8f9.mp4
+2026-09-22 09:51:03 | INFO     | app | Video uploaded: test2.mp4 -> 20260922_095103_e168df4a.mp4 (id=2)
+2026-09-22 09:51:03 | WARNING  | detector.person_detector | YOLO weights not found at /home/claude/Stampede-Prediction-System/trained_models/yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-09-22 09:51:03 | ERROR    | app | Video 2 processing failed: Could not open video file: /home/claude/Stampede-Prediction-System/videos/uploads/20260922_095103_e168df4a.mp4
+Traceback (most recent call last):
+  File "/home/claude/Stampede-Prediction-System/app.py", line 448, in _process_video_job
+    result = processor.process(input_path, output_path)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/claude/Stampede-Prediction-System/detector/video_processor.py", line 98, in process
+    raise IOError(f"Could not open video file: {input_path}")
+OSError: Could not open video file: /home/claude/Stampede-Prediction-System/videos/uploads/20260922_095103_e168df4a.mp4
+2026-09-22 14:44:48 | INFO     | app | User 'user1' logged in (2FA disabled).
+2026-09-22 14:44:48 | INFO     | app | User 'user1' logged out.
+2026-09-22 14:44:48 | INFO     | app | User 'admin1' logged in (2FA disabled).
+2026-09-22 14:44:48 | INFO     | app | Authority added: Officer Singh (Police) by 'admin1'.
+2026-09-22 14:44:48 | INFO     | app | Authority updated: Officer Singh (id=1) by 'admin1'.
+2026-09-22 14:44:48 | INFO     | app | Authority deactivated: Officer Singh (id=1) by 'admin1'.
+2026-09-22 14:44:48 | INFO     | app | Authority deleted: Officer Singh (id=1) by 'admin1'.
+2026-09-26 03:21:24 | WARNING  | utils.email_alert | HIGH alert: 3/3 recipient notification(s) sent (Test).
+2026-09-26 03:21:24 | INFO     | app | User 'admin1' logged in (2FA disabled).
+2026-09-28 18:03:17 | INFO     | utils.video_converter | Converted t.mp4 to browser-playable H.264.
+2026-09-30 02:29:34 | INFO     | app | User 'admin1' logged in (2FA disabled).
+2026-09-30 02:30:21 | INFO     | app | User 'admin1' logged in (2FA disabled).
+2026-09-30 14:35:43 | INFO     | __main__ | New user registered (pending email verification): Mahesh (admin)
+2026-09-30 14:35:43 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=1 ('Mahesh'): 343865
+2026-09-30 14:37:54 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=1 ('Mahesh'): 452260
+2026-09-30 14:38:06 | INFO     | __main__ | User 'Mahesh' verified their email.
+2026-09-30 14:38:27 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=1 ('Mahesh'): 641521
+2026-09-30 14:38:27 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-09-30 14:38:41 | INFO     | __main__ | User 'Mahesh' completed 2FA and logged in.
+2026-09-30 14:39:58 | INFO     | __main__ | Video uploaded: 66aba7bd677cb70184113e1c.mp4 -> 20260930_143958_150c28ac.mp4 (id=1)
+2026-09-30 14:39:58 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\upgrade\Stampede-Prediction-System\Stampede-Prediction-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-09-30 14:40:09 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\upgrade\Stampede-Prediction-System\Stampede-Prediction-System\videos\uploads\20260930_143958_150c28ac.mp4 (96 frames @ 24.0 fps)
+2026-09-30 14:40:13 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:14 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:14 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:16 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:16 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:16 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:40:18 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\upgrade\Stampede-Prediction-System\Stampede-Prediction-System\videos\uploads\20260930_143958_150c28ac.mp4 in 8.42s
+2026-09-30 14:40:18 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-09-30 14:40:18 | INFO     | __main__ | Video 1 processed successfully.
+2026-09-30 14:40:55 | INFO     | utils.report_generator | Generated PDF report for video 1 at D:\CLAUDE\upgrade\Stampede-Prediction-System\Stampede-Prediction-System\reports\stampede_report_1.pdf
+2026-09-30 14:42:06 | INFO     | streaming.camera_reader | Opening camera source (webcam): 0
+2026-09-30 14:42:07 | INFO     | streaming.camera_reader | Camera opened: 640x480 @ 30.0 fps
+2026-09-30 14:42:07 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\upgrade\Stampede-Prediction-System\Stampede-Prediction-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-09-30 14:42:07 | WARNING  | streaming.stream_manager | Fluvio unavailable, falling back to direct mode: The 'fluvio' Python package is not installed. Install it inside a Linux/WSL2 environment with: pip install fluvio
+2026-09-30 14:42:07 | INFO     | __main__ | Live CCTV session started (video_id=2, source=webcam, fluvio_active=False)
+2026-09-30 14:42:08 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-09-30 14:42:08 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=2.00)
+2026-09-30 14:42:10 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:10 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-09-30 14:42:13 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:16 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=2.00)
+2026-09-30 14:42:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:18 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:19 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:19 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:20 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:20 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:23 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:23 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:24 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:24 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:26 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:27 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=2.00)
+2026-09-30 14:42:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:31 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:32 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:33 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:33 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:33 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-09-30 14:42:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:35 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:37 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:37 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-09-30 14:42:38 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-09-30 14:42:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:44 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:45 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:48 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:49 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:49 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:50 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-09-30 14:42:55 | INFO     | streaming.camera_reader | Camera source released: 0
+2026-09-30 14:42:55 | INFO     | streaming.stream_manager | Live session stopped.
+2026-09-30 14:45:43 | INFO     | __main__ | User 'Mahesh' logged out.
+2026-09-30 18:14:00 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=1 ('Mahesh'): 115391
+2026-09-30 18:14:00 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-09-30 18:14:49 | INFO     | __main__ | New user registered (pending email verification): Tulip (admin)
+2026-09-30 18:14:49 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=2 ('Tulip'): 939733
+2026-09-30 18:24:35 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=2 ('Tulip'): 680767
+2026-09-30 18:32:01 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=2 ('Tulip'): 390378
+2026-09-30 18:32:18 | INFO     | __main__ | User 'Tulip' verified their email.
+2026-09-30 18:32:30 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=2 ('Tulip'): 047043
+2026-09-30 18:32:30 | INFO     | __main__ | Password OK for 'Tulip'; awaiting OTP verification.
+2026-09-30 18:32:41 | INFO     | __main__ | User 'Tulip' completed 2FA and logged in.
+2026-09-30 18:35:21 | INFO     | __main__ | User 'Tulip' logged out.
+2026-10-01 12:45:21 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=2 ('Tulip'): 780890
+2026-10-01 12:45:21 | INFO     | __main__ | Password OK for 'Tulip'; awaiting OTP verification.
+2026-10-01 12:45:32 | INFO     | __main__ | User 'Tulip' completed 2FA and logged in.
+2026-10-05 21:42:44 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-05 21:42:44 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-05 21:42:48 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-05 21:42:48 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-05 21:43:53 | INFO     | __main__ | New user registered (pending email verification): field (officer)
+2026-10-05 21:43:53 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=1 ('field'): 091494
+2026-10-05 21:44:15 | INFO     | __main__ | User 'field' verified their email.
+2026-10-05 21:44:29 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=1 ('field'): 235744
+2026-10-05 21:44:29 | INFO     | __main__ | Password OK for 'field'; awaiting OTP verification.
+2026-10-05 21:44:40 | INFO     | __main__ | User 'field' completed 2FA and logged in.
+2026-10-05 21:45:08 | INFO     | __main__ | User 'field' logged out.
+2026-10-05 21:45:46 | INFO     | __main__ | New user registered (pending email verification): admin (admin)
+2026-10-05 21:45:46 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=2 ('admin'): 948112
+2026-10-05 21:45:58 | INFO     | __main__ | User 'admin' verified their email.
+2026-10-05 21:46:15 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=2 ('admin'): 897020
+2026-10-05 21:46:15 | INFO     | __main__ | Password OK for 'admin'; awaiting OTP verification.
+2026-10-05 21:46:25 | INFO     | __main__ | User 'admin' completed 2FA and logged in.
+2026-10-05 21:47:15 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-1.
+2026-10-05 21:47:24 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-2.
+2026-10-05 21:47:24 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-3.
+2026-10-05 21:47:24 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-4.
+2026-10-05 21:47:31 | INFO     | dispatch.simulation | Simulation seeded 6 demo locations at 19.07600, 72.87770.
+2026-10-05 21:48:10 | WARNING  | dispatch.engine | DISPATCH 1 raised by SIMULATION at [Demo] East Stand.
+2026-10-05 21:48:10 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-3 (#1, 380 m away), expires in 25s.
+2026-10-05 21:48:10 | INFO     | dispatch.simulation | Simulation raised dispatch 1 at [Demo] East Stand.
+2026-10-05 21:48:13 | WARNING  | dispatch.engine | DISPATCH 2 raised by SIMULATION at [Demo] Exit C.
+2026-10-05 21:48:14 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-4 (#1, 410 m away), expires in 25s.
+2026-10-05 21:48:14 | INFO     | dispatch.simulation | Simulation raised dispatch 2 at [Demo] Exit C.
+2026-10-05 21:48:27 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-5.
+2026-10-05 21:48:28 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-6.
+2026-10-05 21:48:29 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-7.
+2026-10-05 21:48:29 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-8.
+2026-10-05 21:48:29 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-9.
+2026-10-05 21:48:30 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-10.
+2026-10-05 21:48:30 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-11.
+2026-10-05 21:48:30 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-12.
+2026-10-05 21:48:36 | INFO     | dispatch.engine | Offer 1 (dispatch 1, officer 5) timed out.
+2026-10-05 21:48:36 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-6 (#2, 390 m away), expires in 25s.
+2026-10-05 21:48:40 | INFO     | dispatch.engine | Offer 2 (dispatch 2, officer 6) timed out.
+2026-10-05 21:48:41 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-12 (#2, 360 m away), expires in 25s.
+2026-10-05 21:49:03 | INFO     | dispatch.engine | Offer 3 (dispatch 1, officer 8) timed out.
+2026-10-05 21:49:03 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-8 (#3, 400 m away), expires in 25s.
+2026-10-05 21:49:07 | INFO     | dispatch.engine | Offer 4 (dispatch 2, officer 14) timed out.
+2026-10-05 21:49:08 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-11 (#3, 360 m away), expires in 25s.
+2026-10-05 21:49:25 | WARNING  | dispatch.engine | DISPATCH 3 raised by SIMULATION at [Demo] Main Gate.
+2026-10-05 21:49:25 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-11 (#1, 310 m away), expires in 25s.
+2026-10-05 21:49:25 | INFO     | dispatch.simulation | Simulation raised dispatch 3 at [Demo] Main Gate.
+2026-10-05 21:49:30 | INFO     | dispatch.engine | Offer 5 (dispatch 1, officer 10) timed out.
+2026-10-05 21:49:30 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-7 (#4, 410 m away), expires in 25s.
+2026-10-05 21:49:31 | WARNING  | dispatch.engine | DISPATCH 4 raised by SIMULATION at [Demo] North Concourse.
+2026-10-05 21:49:31 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-3 (#1, 340 m away), expires in 25s.
+2026-10-05 21:49:31 | INFO     | dispatch.simulation | Simulation raised dispatch 4 at [Demo] North Concourse.
+2026-10-05 21:49:34 | INFO     | dispatch.engine | Offer 6 (dispatch 2, officer 13) timed out.
+2026-10-05 21:49:35 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-9 (#4, 370 m away), expires in 25s.
+2026-10-05 21:49:51 | INFO     | dispatch.engine | Offer 7 (dispatch 3, officer 13) timed out.
+2026-10-05 21:49:52 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-12 (#2, 330 m away), expires in 25s.
+2026-10-05 21:49:56 | INFO     | dispatch.engine | Offer 8 (dispatch 1, officer 9) timed out.
+2026-10-05 21:49:56 | INFO     | dispatch.engine | Offer 9 (dispatch 4, officer 5) timed out.
+2026-10-05 21:49:56 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-10 (#5, 420 m away), expires in 25s.
+2026-10-05 21:49:56 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-2 (#2, 380 m away), expires in 25s.
+2026-10-05 21:50:00 | INFO     | dispatch.engine | Offer 10 (dispatch 2, officer 11) timed out.
+2026-10-05 21:50:01 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-10 (#5, 400 m away), expires in 25s.
+2026-10-05 21:50:17 | INFO     | dispatch.engine | Offer 11 (dispatch 3, officer 14) timed out.
+2026-10-05 21:50:17 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-10 (#3, 340 m away), expires in 25s.
+2026-10-05 21:50:21 | INFO     | dispatch.engine | Offer 12 (dispatch 1, officer 12) timed out.
+2026-10-05 21:50:21 | INFO     | dispatch.engine | Offer 13 (dispatch 4, officer 4) timed out.
+2026-10-05 21:50:21 | ERROR    | dispatch.engine | DISPATCH 1 UNASSIGNED: No response after asking 5 officers.
+2026-10-05 21:50:21 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-1 (#3, 390 m away), expires in 25s.
+2026-10-05 21:50:21 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-05 21:50:21 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-05 21:50:21 | INFO     | utils.email_alert | Email alerts disabled; skipping CRITICAL notification.
+2026-10-05 21:50:27 | INFO     | dispatch.engine | Offer 14 (dispatch 2, officer 12) timed out.
+2026-10-05 21:50:28 | ERROR    | dispatch.engine | DISPATCH 2 UNASSIGNED: No response after asking 5 officers.
+2026-10-05 21:50:28 | INFO     | utils.email_alert | Email alerts disabled; skipping CRITICAL notification.
+2026-10-05 21:50:42 | INFO     | dispatch.engine | Offer 15 (dispatch 3, officer 12) timed out.
+2026-10-05 21:50:43 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-7 (#4, 340 m away), expires in 25s.
+2026-10-05 21:50:47 | INFO     | dispatch.engine | Offer 16 (dispatch 4, officer 3) timed out.
+2026-10-05 21:50:47 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-4 (#4, 410 m away), expires in 25s.
+2026-10-05 21:51:09 | INFO     | dispatch.engine | Offer 17 (dispatch 3, officer 9) timed out.
+2026-10-05 21:51:09 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-9 (#5, 350 m away), expires in 25s.
+2026-10-05 21:51:13 | INFO     | dispatch.engine | Offer 18 (dispatch 4, officer 6) timed out.
+2026-10-05 21:51:14 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-8 (#5, 440 m away), expires in 25s.
+2026-10-05 21:51:34 | INFO     | dispatch.engine | Offer 19 (dispatch 3, officer 11) timed out.
+2026-10-05 21:51:35 | ERROR    | dispatch.engine | DISPATCH 3 UNASSIGNED: No response after asking 5 officers.
+2026-10-05 21:51:35 | INFO     | utils.email_alert | Email alerts disabled; skipping CRITICAL notification.
+2026-10-05 21:51:41 | INFO     | dispatch.engine | Offer 20 (dispatch 4, officer 10) timed out.
+2026-10-05 21:51:41 | ERROR    | dispatch.engine | DISPATCH 4 UNASSIGNED: No response after asking 5 officers.
+2026-10-05 21:51:41 | INFO     | utils.email_alert | Email alerts disabled; skipping CRITICAL notification.
+2026-10-05 21:51:56 | WARNING  | dispatch.simulation | Simulation purge: 4 dispatches, 20 offers, 12 demo officers, 6 demo locations removed.
+2026-10-06 20:15:44 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-06 20:15:44 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-06 20:15:51 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-06 20:15:51 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-06 20:16:27 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=2 ('admin'): 648397
+2026-10-06 20:16:27 | INFO     | __main__ | Password OK for 'admin'; awaiting OTP verification.
+2026-10-06 20:16:39 | INFO     | __main__ | User 'admin' completed 2FA and logged in.
+2026-10-06 20:17:14 | INFO     | dispatch.simulation | Simulation seeded 6 demo locations at 19.07600, 72.87770.
+2026-10-06 20:17:29 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-1.
+2026-10-06 20:17:30 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-2.
+2026-10-06 20:17:30 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-3.
+2026-10-06 20:17:31 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-4.
+2026-10-06 20:17:31 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-5.
+2026-10-06 20:17:32 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-6.
+2026-10-06 20:17:32 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-7.
+2026-10-06 20:17:32 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-8.
+2026-10-06 20:17:32 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-9.
+2026-10-06 20:17:33 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-10.
+2026-10-06 20:17:33 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-11.
+2026-10-06 20:17:33 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-12.
+2026-10-06 20:18:31 | WARNING  | dispatch.engine | DISPATCH 1 raised by SIMULATION at [Demo] East Stand.
+2026-10-06 20:18:32 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-11 (#1, 400 m away), expires in 25s.
+2026-10-06 20:18:32 | INFO     | dispatch.simulation | Simulation raised dispatch 1 at [Demo] East Stand.
+2026-10-06 20:18:37 | WARNING  | dispatch.simulation | Simulation purge: 1 dispatches, 1 offers, 12 demo officers, 6 demo locations removed.
+2026-10-06 20:19:29 | INFO     | dispatch.simulation | Simulation seeded 6 demo locations at 23.07600, 72.87770.
+2026-10-06 20:19:39 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-1.
+2026-10-06 20:19:40 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-2.
+2026-10-06 20:19:41 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-3.
+2026-10-06 20:19:41 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-4.
+2026-10-06 20:19:41 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-5.
+2026-10-06 20:19:42 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-6.
+2026-10-06 20:19:42 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-7.
+2026-10-06 20:19:42 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-8.
+2026-10-06 20:19:42 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-9.
+2026-10-06 20:19:43 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-10.
+2026-10-06 20:19:43 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-11.
+2026-10-06 20:19:43 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-12.
+2026-10-06 20:19:53 | WARNING  | dispatch.engine | DISPATCH 1 raised by SIMULATION at [Demo] East Stand.
+2026-10-06 20:19:54 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-12 (#1, 400 m away), expires in 25s.
+2026-10-06 20:19:54 | INFO     | dispatch.simulation | Simulation raised dispatch 1 at [Demo] East Stand.
+2026-10-06 20:19:59 | WARNING  | dispatch.engine | DISPATCH 2 raised by SIMULATION at [Demo] Exit C.
+2026-10-06 20:19:59 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-3 (#1, 350 m away), expires in 25s.
+2026-10-06 20:19:59 | INFO     | dispatch.simulation | Simulation raised dispatch 2 at [Demo] Exit C.
+2026-10-06 20:20:01 | WARNING  | dispatch.engine | DISPATCH 3 raised by SIMULATION at [Demo] Main Gate.
+2026-10-06 20:20:01 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-9 (#1, 290 m away), expires in 25s.
+2026-10-06 20:20:01 | INFO     | dispatch.simulation | Simulation raised dispatch 3 at [Demo] Main Gate.
+2026-10-06 20:20:06 | WARNING  | dispatch.engine | DISPATCH 4 raised by SIMULATION at [Demo] North Concourse.
+2026-10-06 20:20:06 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-5 (#1, 410 m away), expires in 25s.
+2026-10-06 20:20:06 | INFO     | dispatch.simulation | Simulation raised dispatch 4 at [Demo] North Concourse.
+2026-10-06 20:20:20 | INFO     | dispatch.engine | Offer 1 (dispatch 1, officer 14) timed out.
+2026-10-06 20:20:20 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-8 (#2, 410 m away), expires in 25s.
+2026-10-06 20:20:24 | INFO     | dispatch.engine | Offer 2 (dispatch 2, officer 5) timed out.
+2026-10-06 20:20:25 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-10 (#2, 360 m away), expires in 25s.
+2026-10-06 20:20:27 | INFO     | dispatch.engine | Offer 3 (dispatch 3, officer 11) timed out.
+2026-10-06 20:20:27 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-2 (#2, 300 m away), expires in 25s.
+2026-10-06 20:20:31 | INFO     | dispatch.engine | Offer 4 (dispatch 4, officer 7) timed out.
+2026-10-06 20:20:32 | INFO     | dispatch.engine | Dispatch 4 offered to sim-officer-7 (#2, 440 m away), expires in 25s.
+2026-10-06 20:20:46 | INFO     | dispatch.engine | Offer 5 (dispatch 1, officer 10) timed out.
+2026-10-06 20:20:47 | INFO     | dispatch.engine | Dispatch 1 offered to sim-officer-11 (#3, 420 m away), expires in 25s.
+2026-10-06 20:20:51 | INFO     | dispatch.engine | Offer 6 (dispatch 2, officer 12) timed out.
+2026-10-06 20:20:51 | INFO     | dispatch.engine | Dispatch 2 offered to sim-officer-7 (#3, 360 m away), expires in 25s.
+2026-10-06 20:20:53 | INFO     | dispatch.engine | Offer 7 (dispatch 3, officer 4) timed out.
+2026-10-06 20:20:53 | INFO     | dispatch.engine | Dispatch 3 offered to sim-officer-10 (#3, 300 m away), expires in 25s.
+2026-10-06 20:20:57 | WARNING  | dispatch.simulation | Simulation purge: 4 dispatches, 11 offers, 12 demo officers, 6 demo locations removed.

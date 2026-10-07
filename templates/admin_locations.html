@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Locations — StampedeGuard{% endblock %}
+{% block page_title %}Monitored Locations{% endblock %}
+{% block page_sub %}Register real-world coordinates for CCTV sources and uploads{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h5 class="mb-0"><i class="bi bi-geo-alt me-2"></i>Registered Locations</h5>
+    <button type="button" class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#locationModal" onclick="openAddLocationModal()">
+      <i class="bi bi-plus-circle me-1"></i>Add Location
+    </button>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-glass align-middle">
+      <thead>
+        <tr>
+          <th>Name</th><th>Description</th><th>Coordinates</th>
+          <th>Status</th><th>Videos/Cameras Using It</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for loc in locations %}
+        <tr>
+          <td>{{ loc.name }}</td>
+          <td class="text-muted-soft small">{{ loc.description or "—" }}</td>
+          <td class="mono small">{{ "%.5f"|format(loc.latitude) }}, {{ "%.5f"|format(loc.longitude) }}</td>
+          <td>
+            {% if loc.is_active %}
+              <span class="risk-badge risk-SAFE">ACTIVE</span>
+            {% else %}
+              <span class="risk-badge risk-CRITICAL">INACTIVE</span>
+            {% endif %}
+          </td>
+          <td class="text-muted-soft">{{ usage.get(loc.id, 0) }}</td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-glass" title="Edit"
+                    data-bs-toggle="modal" data-bs-target="#locationModal"
+                    onclick='openEditLocationModal({{ {"id": loc.id, "name": loc.name, "description": loc.description or "", "latitude": loc.latitude, "longitude": loc.longitude, "is_active": loc.is_active}|tojson }})'>
+              <i class="bi bi-pencil"></i>
+            </button>
+            <form method="POST" action="{{ url_for('admin_location_toggle', location_id=loc.id) }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-outline-glass" title="{{ 'Deactivate' if loc.is_active else 'Activate' }}">
+                <i class="bi {{ 'bi-toggle-on' if loc.is_active else 'bi-toggle-off' }}"></i>
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_location_delete', location_id=loc.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete location {{ loc.name }}? Videos already tagged with it keep their stored name but lose the map link.');">
+              <button type="submit" class="btn btn-sm btn-outline-glass text-danger" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted-soft py-4">
+          No locations registered yet. Add one so uploads and live sessions can be tagged with a real, verified position on the Risk Map.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" id="locationForm">
+        {{ form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title" id="locationModalTitle">Add Location</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            {{ form.name.label(class="form-label small") }}
+            {{ form.name(class="form-control", id="location_name_field", placeholder="e.g. Main Gate, Sector 4") }}
+          </div>
+          <div class="mb-3">
+            {{ form.description.label(class="form-label small") }}
+            {{ form.description(class="form-control", id="location_description_field") }}
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              {{ form.latitude.label(class="form-label small") }}
+              {{ form.latitude(class="form-control", id="location_lat_field", step="any") }}
+            </div>
+            <div class="col-6">
+              {{ form.longitude.label(class="form-label small") }}
+              {{ form.longitude(class="form-control", id="location_lng_field", step="any") }}
+            </div>
+          </div>
+          <div class="form-text mb-3">
+            Tip: right-click a spot on Google Maps and copy the coordinates shown.
+          </div>
+          <div class="form-check">
+            {{ form.is_active(class="form-check-input", id="location_is_active_field") }}
+            {{ form.is_active.label(class="form-check-label small") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+          {{ form.submit(class="btn btn-gradient") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openAddLocationModal() {
+    document.getElementById('locationModalTitle').textContent = 'Add Location';
+    document.getElementById('locationForm').action = "{{ url_for('admin_location_add') }}";
+    document.getElementById('locationForm').reset();
+    document.getElementById('location_is_active_field').checked = true;
+  }
+
+  function openEditLocationModal(data) {
+    document.getElementById('locationModalTitle').textContent = 'Edit Location';
+    document.getElementById('locationForm').action = '/admin/locations/' + data.id + '/edit';
+    document.getElementById('location_name_field').value = data.name;
+    document.getElementById('location_description_field').value = data.description;
+    document.getElementById('location_lat_field').value = data.latitude;
+    document.getElementById('location_lng_field').value = data.longitude;
+    document.getElementById('location_is_active_field').checked = data.is_active;
+  }
+</script>
+{% endblock %}

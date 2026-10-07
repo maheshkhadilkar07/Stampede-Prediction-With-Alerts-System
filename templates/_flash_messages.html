@@ -1,0 +1,14 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="{% if current_user.is_authenticated %}mb-3{% else %}auth-wrapper py-0{% endif %}" style="{% if not current_user.is_authenticated %}min-height:auto;{% endif %}">
+      <div style="max-width: 480px; margin: 12px auto 0 auto;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'danger' else category }} py-2 px-3 small" role="alert"
+               style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-glass); color: var(--text-primary); border-radius: 10px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+{% endwith %}

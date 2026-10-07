@@ -1,0 +1,39 @@
+{% extends "public_base.html" %}
+{% block title %}Technology — {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container">
+  <h1 class="brand-font">Technology</h1>
+  <p>The tools and libraries this platform is actually built with.</p>
+</div></section>
+<section class="section"><div class="container">
+  {% for group, items in [
+    ("AI &amp; computer vision",[
+      ("bi-cpu","YOLO26 (Ultralytics)","Pretrained real-time object detector; only the person class is used."),
+      ("bi-camera","OpenCV","Video decoding, frame processing, annotation and heatmap rendering."),
+      ("bi-grid","NumPy","Numerical work for density grids and heatmap accumulation."),
+      ("bi-film","FFmpeg <span class='badge-soft'>optional</span>","Re-encodes processed video to H.264 so it plays in the browser, when FFmpeg is available.")]),
+    ("Backend &amp; data",[
+      ("bi-server","Python + Flask","Web application, routing, APIs and background processing threads."),
+      ("bi-person-lock","Flask-Login / Flask-WTF","Sessions, role-based access, validated forms and CSRF protection."),
+      ("bi-database","SQLite + SQLAlchemy","Users, videos, alerts, authorities, locations and delivery records."),
+      ("bi-broadcast","Fluvio <span class='badge-soft'>optional</span>","Producer/consumer streaming of live frames, with automatic fallback to direct mode."),
+      ("bi-envelope","SMTP email","OTP codes and HIGH/CRITICAL alert notifications."),
+      ("bi-file-earmark-pdf","ReportLab","PDF report generation.")]),
+    ("Frontend",[
+      ("bi-bootstrap","Bootstrap 5","Responsive layout and components."),
+      ("bi-bar-chart-line","Chart.js","Live and analytics charts."),
+      ("bi-map","Leaflet + OpenStreetMap","Interactive incident and location map.")]),
+    ("Evaluation",[
+      ("bi-clipboard-data","scikit-learn + Matplotlib <span class='badge-soft'>optional</span>","Accuracy, precision, recall, F1 and confusion matrix tooling for labelled footage.")])] %}
+  <h4 class="tech-group-title brand-font">{{ group|safe }}</h4>
+  <div class="row g-3">
+    {% for icon,name,desc in items %}
+    <div class="col-md-6 col-lg-4"><div class="feature-card tech-card">
+      <div class="feature-icon"><i class="bi {{ icon }}"></i></div>
+      <div><h6>{{ name|safe }}</h6><p>{{ desc }}</p></div>
+    </div></div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div></section>
+{% endblock %}

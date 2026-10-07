@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+{% block title %}Dispatch Board — {{ site.name }}{% endblock %}
+{% block page_title %}Dispatch Board{% endblock %}
+{% block page_sub %}Field-officer assignments, live{% endblock %}
+
+{% block content %}
+
+{#- ---------------------------------------------------------------------
+    Status pills. The dispatch engine has seven states and they mean
+    genuinely different things to whoever is reading this page, so they
+    get distinct colours rather than one generic "active" look.
+    --------------------------------------------------------------------- -#}
+{% set status_class = {
+  "PENDING":   "risk-MEDIUM",
+  "OFFERED":   "risk-HIGH",
+  "ACCEPTED":  "risk-SAFE",
+  "EN_ROUTE":  "risk-SAFE",
+  "ARRIVED":   "risk-SAFE",
+  "RESOLVED":  "risk-SAFE",
+  "CANCELLED": "risk-LOW",
+  "UNASSIGNED":"risk-CRITICAL",
+} %}
+
+{% if not dispatch_enabled %}
+<div class="alert alert-warning">
+  <i class="bi bi-exclamation-triangle me-2"></i>
+  Officer dispatch is switched off. No alert will page anyone until
+  <code>DISPATCH_ENABLED=true</code> is set and the server is restarted.
+</div>
+{% endif %}
+
+{% if not push_configured %}
+<div class="alert alert-info">
+  <i class="bi bi-phone me-2"></i>
+  <strong>Background alerts are not set up.</strong> {{ push_reason }}
+  Officers still receive every offer while their app is open — offers are
+  polled every few seconds as a fallback — but a phone in a pocket stays
+  silent.
+</div>
+{% endif %}
+
+<!-- ================= SUMMARY ================= -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="glass-card stat-card">
+      <div class="stat-label">Open incidents</div>
+      <div class="stat-value">{{ open_dispatches | length }}</div>
+      <i class="bi bi-broadcast-pin stat-icon"></i>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="glass-card stat-card">
+      <div class="stat-label">Officers on duty</div>
+      <div class="stat-value">{{ on_duty_count }}</div>
+      <i class="bi bi-person-badge stat-icon"></i>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="glass-card stat-card">
+      <div class="stat-label">Avg. response</div>
+      <div class="stat-value">
+        {% if average_response is not none %}{{ average_response }}<span class="fs-6">s</span>
+        {% else %}<span class="text-muted-soft">—</span>{% endif %}
+      </div>
+      <i class="bi bi-stopwatch stat-icon"></i>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="glass-card stat-card">
+      <div class="stat-label">Offer / radius</div>
+      <div class="stat-value">{{ offer_timeout }}<span class="fs-6">s · {{ search_radius }}km</span></div>
+      <i class="bi bi-signpost-split stat-icon"></i>
+    </div>
+  </div>
+</div>
+
+<!-- ================= OPEN INCIDENTS ================= -->
+<div class="glass-card mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h5 class="mb-0">
+      <i class="bi bi-broadcast me-2"></i>Open Incidents
+      <span class="text-muted-soft small ms-1" id="refreshNote"></span>
+    </h5>
+
+    <form method="POST" action="{{ url_for('dispatch_admin.admin_manual_dispatch') }}"
+          class="d-flex flex-wrap gap-2 align-items-center">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <select name="location_id" class="form-select form-select-sm" style="width:auto" required>
+        <option value="">Location…</option>
+        {% for loc in locations %}
+        <option value="{{ loc.id }}">{{ loc.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="risk_level" class="form-select form-select-sm" style="width:auto">
+        <option value="CRITICAL">Critical</option>
+        <option value="HIGH" selected>High</option>
+      </select>
+      <input type="text" name="message" class="form-control form-control-sm"
+             style="width:14rem" placeholder="Reason (e.g. radio report)">
+      <button type="submit" class="btn btn-gradient btn-sm text-nowrap">
+        <i class="bi bi-plus-circle me-1"></i>Raise dispatch
+      </button>
+    </form>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-glass align-middle">
+      <thead>
+        <tr>
+          <th>#</th><th>Risk</th><th>Location</th><th>Status</th>
+          <th>Offered to</th><th>Assigned to</th><th>Raised</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="openRows">
+        {% for d in open_dispatches %}
+        <tr>
+          <td class="mono">{{ d.id }}</td>
+          <td><span class="risk-badge risk-{{ d.risk_level }}">{{ d.risk_level }}</span></td>
+          <td>
+            <div>{{ d.location_name or "Unknown location" }}</div>
+            <div class="text-muted-soft small mono">{{ "%.4f"|format(d.latitude) }}, {{ "%.4f"|format(d.longitude) }}</div>
+          </td>
+          <td><span class="risk-badge {{ status_class.get(d.status, 'risk-LOW') }}">{{ d.status }}</span></td>
+          <td class="text-muted-soft small">
+            {% if d.offers %}
+              {% for offer in d.offers %}
+              <div>
+                {{ offer.sequence }}. {{ offer.officer.username }}
+                {% if offer.distance_km %}<span class="mono">{{ "%.1f"|format(offer.distance_km) }} km</span>{% endif %}
+                <span class="mono text-uppercase">{{ offer.status }}</span>
+              </div>
+              {% endfor %}
+            {% else %}
+              <span class="text-muted-soft">nobody yet</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if d.accepted_by %}
+              {{ d.accepted_by.username }}
+              {% if d.accepted_by.badge_number %}<div class="text-muted-soft small mono">#{{ d.accepted_by.badge_number }}</div>{% endif %}
+            {% else %}
+              <span class="text-muted-soft">—</span>
+            {% endif %}
+          </td>
+          <td class="text-muted-soft small mono">{{ d.created_at | localtime }}</td>
+          <td class="text-nowrap">
+            {% if d.is_open %}
+            <form method="POST" action="{{ url_for('dispatch_admin.admin_cancel_dispatch', dispatch_id=d.id) }}"
+                  class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="reason" value="Closed by an administrator from the dispatch board.">
+              <button type="submit" class="btn btn-sm btn-outline-glass" title="Cancel this incident"
+                      onclick="return confirm('Cancel dispatch #{{ d.id }}? Any officer holding it is released.');">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </form>
+            {% elif d.status == "UNASSIGNED" %}
+            <form method="POST" action="{{ url_for('dispatch_admin.admin_retry_dispatch', dispatch_id=d.id) }}"
+                  class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-glass" title="Offer it again">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted-soft py-4">
+            No open incidents. When an alert reaches HIGH or CRITICAL at a
+            camera with coordinates, the nearest on-duty officer is paged
+            here automatically.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if not locations %}
+  <div class="text-muted-soft small mt-2">
+    <i class="bi bi-info-circle me-1"></i>
+    No active locations are registered. Manual dispatches need one —
+    add them under <a href="{{ url_for('admin_locations') }}">Locations</a>.
+  </div>
+  {% endif %}
+</div>
+
+<!-- ================= OFFICERS ================= -->
+<div class="glass-card mb-3">
+  <h5 class="mb-3"><i class="bi bi-people me-2"></i>Field Officers</h5>
+
+  {% if officers %}
+  <div class="table-responsive">
+    <table class="table table-glass align-middle">
+      <thead>
+        <tr><th>Officer</th><th>Badge</th><th>Phone</th><th>Duty</th><th>Last position</th><th>Assignments</th><th>Role</th></tr>
+      </thead>
+      <tbody>
+        {% for o in officers %}
+        {% set fresh = o.has_fresh_location(location_max_age) %}
+        <tr>
+          <td>{{ o.username }}</td>
+          <td class="mono small">{{ o.badge_number or "—" }}</td>
+          <td class="mono small">{{ o.phone_number or "—" }}</td>
+          <td>
+            {% if o.on_duty %}
+              <span class="risk-badge risk-SAFE">ON DUTY</span>
+            {% else %}
+              <span class="risk-badge risk-LOW">OFF DUTY</span>
+            {% endif %}
+          </td>
+          <td class="small">
+            {% if o.last_location_at %}
+              {% if fresh %}
+                <span class="text-success"><i class="bi bi-geo-alt-fill"></i> live</span>
+                <span class="text-muted-soft mono">
+                  {{ "%.4f"|format(o.last_latitude) }}, {{ "%.4f"|format(o.last_longitude) }}
+                </span>
+              {% else %}
+                <span class="text-warning"><i class="bi bi-geo-alt"></i> stale</span>
+                <span class="text-muted-soft small">last seen {{ o.last_location_at | localtime }}</span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted-soft">never reported</span>
+            {% endif %}
+          </td>
+          <td class="text-muted-soft small">
+            {{ o.offers_received | length }} offered ·
+            {{ o.dispatches_accepted | length }} accepted
+          </td>
+          <td>
+            <form method="POST" action="{{ url_for('dispatch_admin.admin_set_role', user_id=o.id) }}"
+                  class="d-flex gap-1">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <select name="role" class="form-select form-select-sm" style="width:auto">
+                <option value="officer" selected>Officer</option>
+                <option value="user">Operator</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button type="submit" class="btn btn-sm btn-outline-glass" title="Apply role">Set</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-muted-soft">
+    No field officers yet. Promote an account from
+    <a href="{{ url_for('admin_panel') }}">Admin Panel</a>, or register a new
+    one with the <strong>Field Officer</strong> role — then they install the
+    officer app from <code>/officer/</code> on their phone.
+  </div>
+  {% endif %}
+</div>
+
+<!-- ================= CLOSED ================= -->
+<div class="glass-card">
+  <h5 class="mb-3"><i class="bi bi-clock-history me-2"></i>Recently Closed</h5>
+  <div class="table-responsive">
+    <table class="table table-glass align-middle">
+      <thead>
+        <tr><th>#</th><th>Risk</th><th>Location</th><th>Outcome</th><th>Assigned to</th>
+            <th>Offers</th><th>Responded in</th><th>Closed</th></tr>
+      </thead>
+      <tbody>
+        {% for d in closed_dispatches %}
+        <tr>
+          <td class="mono">{{ d.id }}</td>
+          <td><span class="risk-badge risk-{{ d.risk_level }}">{{ d.risk_level }}</span></td>
+          <td>{{ d.location_name or "Unknown" }}</td>
+          <td>
+            <span class="risk-badge {{ status_class.get(d.status, 'risk-LOW') }}">{{ d.status }}</span>
+            {% if d.close_reason %}
+            <div class="text-muted-soft small">{{ d.close_reason }}</div>
+            {% endif %}
+          </td>
+          <td>
+            {% if d.accepted_by %}{{ d.accepted_by.username }}
+            {% else %}<span class="text-muted-soft">—</span>{% endif %}
+          </td>
+          <td class="mono small">{{ d.offers_made }}</td>
+          <td class="mono small">
+            {% if d.response_seconds is not none %}{{ d.response_seconds }}s
+            {% else %}<span class="text-muted-soft">—</span>{% endif %}
+          </td>
+          <td class="text-muted-soft small mono">
+            {{ (d.resolved_at or d.created_at) | localtime }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted-soft py-4">
+          Nothing closed yet.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------------
+   Live refresh
+   An incident board a minute out of date is worse than no board: a
+   dispatcher needs to watch an offer expire and move on to the next
+   officer as it happens. The first render is server-side, so the page is
+   already correct if this script never runs; polling only rewrites the
+   open-incident rows.
+   --------------------------------------------------------------------- */
+(function () {
+  "use strict";
+
+  var POLL_MS = 10000;
+  var STATUS_CLASS = {{ status_class | tojson }};
+  var OPEN = ["PENDING", "OFFERED", "ACCEPTED", "EN_ROUTE", "ARRIVED"];
+
+  function esc(value) {
+    var div = document.createElement("div");
+    div.textContent = value === null || value === undefined ? "" : String(value);
+    return div.innerHTML;
+  }
+
+  function pill(text, cls) {
+    return '<span class="risk-badge ' + cls + '">' + esc(text) + "</span>";
+  }
+
+  function offersCell(row) {
+    if (!row.offers || !row.offers.length) {
+      return '<span class="text-muted-soft">nobody yet</span>';
+    }
+    return row.offers.map(function (o) {
+      var distance = o.distance_km
+        ? ' <span class="mono">' + Number(o.distance_km).toFixed(1) + " km</span>" : "";
+      return "<div>" + esc(o.sequence + ". " + o.officer) + distance +
+             ' <span class="mono text-uppercase">' + esc(o.status) + "</span></div>";
+    }).join("");
+  }
+
+  function rowHtml(d) {
+    return "<tr>" +
+      '<td class="mono">' + d.id + "</td>" +
+      "<td>" + pill(d.risk_level, "risk-" + d.risk_level) + "</td>" +
+      "<td><div>" + esc(d.location_name || "Unknown location") + "</div>" +
+        '<div class="text-muted-soft small mono">' + Number(d.latitude).toFixed(4) +
+        ", " + Number(d.longitude).toFixed(4) + "</div></td>" +
+      "<td>" + pill(d.status, STATUS_CLASS[d.status] || "risk-LOW") + "</td>" +
+      '<td class="text-muted-soft small">' + offersCell(d) + "</td>" +
+      "<td>" + esc(d.accepted_by || "—") + "</td>" +
+      '<td class="text-muted-soft small mono">' + esc(d.created_at_label || "") + "</td>" +
+      "</tr>";
+  }
+
+  var tbody = document.getElementById("openRows");
+  var note = document.getElementById("refreshNote");
+  var busy = false;
+
+  async function refresh() {
+    if (busy) return;
+    busy = true;
+    try {
+      var response = await fetch("{{ url_for('dispatch_admin.api_admin_dispatches') }}", {
+        credentials: "same-origin",
+      });
+      if (!response.ok) return;
+      var data = await response.json();
+      if (!data.ok) return;
+
+      if (tbody) {
+        var open = (data.dispatches || []).filter(function (d) {
+          return OPEN.indexOf(d.status) !== -1;
+        });
+        tbody.innerHTML = open.length
+          ? open.map(rowHtml).join("")
+          : '<tr><td colspan="8" class="text-center text-muted-soft py-4">' +
+            "No open incidents.</td></tr>";
+      }
+      if (note) {
+        note.textContent = "updated " + new Date().toLocaleTimeString() +
+          " · " + (data.on_duty || []).length + " officer(s) tracked";
+      }
+    } catch (_) {
+      if (note) note.textContent = "reconnecting…";
+    } finally {
+      busy = false;
+    }
+  }
+
+  refresh();
+  setInterval(refresh, POLL_MS);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) refresh();
+  });
+})();
+</script>
+
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "public_base.html" %}
+{% block title %}How It Works — {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container">
+  <h1 class="brand-font">How it works</h1>
+  <p>Video in, risk level and responder alerts out.</p>
+</div></section>
+<section class="section"><div class="container">
+  <div class="pipeline-flow mb-5">
+    {% for step in ["CCTV / Video","YOLO Detection","Crowd Density","Growth Analysis","Risk Assessment","Heatmap","Alert"] %}
+      <span class="node">{{ step }}</span>{% if not loop.last %}<span class="arrow"><i class="bi bi-arrow-right"></i></span>{% endif %}
+    {% endfor %}
+  </div>
+  <div class="pipeline">
+    {% for n,t,d in [
+      (1,"CCTV / video input","An uploaded file, or a live webcam, RTSP CCTV or IP-camera stream. Live frames may pass through Fluvio; if it is unavailable they are processed directly."),
+      (2,"YOLO26 detection","Every analysed frame (every %d-th frame) is passed to YOLO26 and only the person class is kept."|format(frame_skip)),
+      (3,"Crowd density","The frame is divided into a %d x %d grid and people are assigned to cells by bounding-box centre; the busiest cell gives the peak density."|format(grid_rows, grid_cols)),
+      (4,"Growth analysis","The fractional change in the total people count between consecutive analysed frames is the growth rate."),
+      (5,"Risk assessment","Peak density maps to a base level using the thresholds below; a growth rate of %d%% or more escalates the level by one step."|format((surge*100)|round|int)),
+      (6,"Heatmap","Cell densities accumulate in a buffer that fades over time and is colour-mapped onto the video."),
+      (7,"Alert","At HIGH or CRITICAL an alert is stored and emailed to admins and matching active authorities; each delivery is tracked.")] %}
+    <div class="pipeline-step"><div class="step-number">{{ n }}</div><div><h5>{{ t }}</h5><p>{{ d }}</p></div></div>
+    {% endfor %}
+  </div>
+
+  <h3 class="mt-5 mb-3 brand-font">Risk thresholds</h3>
+  <div class="glass-card"><div class="table-responsive"><table class="table table-glass mb-0">
+    <thead><tr><th>Level</th><th>Peak density (people per grid cell) from</th></tr></thead>
+    <tbody>
+      {% for level, info in risk_levels.items() %}
+      <tr><td><span class="risk-badge risk-{{ level }}">{{ level }}</span></td><td class="mono">&ge; {{ info.density }}</td></tr>
+      {% endfor %}
+    </tbody></table></div></div>
+  <div class="callout mt-3">Alerts fire at <strong>HIGH</strong> and <strong>CRITICAL</strong>. These thresholds are configuration values, not learned parameters; calibrate them per camera and venue before relying on them operationally.</div>
+</div></section>
+{% endblock %}

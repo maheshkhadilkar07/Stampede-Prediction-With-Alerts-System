@@ -1,0 +1,31 @@
+{% extends "public_base.html" %}
+{% block title %}Contact — {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container">
+  <h1 class="brand-font">Contact us</h1>
+  <p>Questions, feedback or collaboration ideas - send us a message.</p>
+</div></section>
+<section class="section"><div class="container"><div class="row g-4">
+  <div class="col-lg-7"><div class="glass-card">
+    <form method="POST" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="mb-3"><label class="form-label">Name</label>{{ form.name(class="form-control", placeholder="Your name") }}
+        {% for e in form.name.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}</div>
+      <div class="mb-3"><label class="form-label">Email</label>{{ form.email(class="form-control", placeholder="you@example.com") }}
+        {% for e in form.email.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}</div>
+      <div class="mb-3"><label class="form-label">Message</label>{{ form.message(class="form-control", rows="6", placeholder="How can we help?") }}
+        {% for e in form.message.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}</div>
+      {{ form.submit(class="btn btn-gradient") }}
+    </form>
+  </div></div>
+  <div class="col-lg-5"><div class="glass-card">
+    <h5 class="mb-3">Project information</h5>
+    <p class="text-muted-soft small">{{ site.name }} - AI-based real-time stampede prediction and alert system.</p>
+    {% if site.team_name %}<p class="mb-1"><strong>Team:</strong> {{ site.team_name }}</p>{% endif %}
+    {% if site.team_members %}<p class="mb-1"><strong>Members:</strong> {{ site.team_members|join(", ") }}</p>{% endif %}
+    {% if site.institution %}<p class="mb-1"><strong>Institution:</strong> {{ site.institution }}</p>{% endif %}
+    {% if site.contact_email %}<p class="mb-1"><i class="bi bi-envelope me-1"></i><a href="mailto:{{ site.contact_email }}">{{ site.contact_email }}</a></p>{% endif %}
+    {% if site.github %}<p class="mb-0 mt-2"><a href="{{ site.github }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1"></i>GitHub repository</a></p>{% endif %}
+  </div></div>
+</div></div></section>
+{% endblock %}

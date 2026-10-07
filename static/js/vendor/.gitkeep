@@ -1,0 +1,8 @@
+Drop three.min.js here to make the 3D simulation work without internet.
+
+    curl -o three.min.js https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
+
+templates/simulation.html loads this local copy first and only falls back to
+the CDN if it is missing, so vendoring it means a presentation does not
+depend on the venue's Wi-Fi. Pin r128: the scene avoids APIs added later
+(CapsuleGeometry, for one) so it stays compatible with this build.

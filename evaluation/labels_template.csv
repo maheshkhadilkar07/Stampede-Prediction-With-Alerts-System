@@ -1,0 +1,5 @@
+video_path,start_sec,end_sec,ground_truth_label,notes
+videos/test_clips/clip1_calm_market.mp4,0,15,NO_RISK,Everyday footfall, no crowding
+videos/test_clips/clip2_festival_gate.mp4,20,35,RISK,Visible crowd surge at entrance gate
+videos/test_clips/clip3_platform.mp4,0,10,NO_RISK,Normal platform traffic
+videos/test_clips/clip3_platform.mp4,45,60,RISK,Overcrowded platform edge during train arrival

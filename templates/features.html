@@ -1,0 +1,29 @@
+{% extends "public_base.html" %}
+{% block title %}Features — {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container">
+  <h1 class="brand-font">Features</h1>
+  <p>Everything from detection to responder notification, in one platform.</p>
+</div></section>
+<section class="section"><div class="container"><div class="row g-4">
+  {% for icon,t,d in [
+    ("bi-person-bounding-box","Person detection","YOLO26 finds every person in the analysed frames of an upload or a live feed."),
+    ("bi-grid-3x3-gap","Crowd density","A 6 x 8 grid locates the most crowded zone of the frame, giving a peak people-per-cell density."),
+    ("bi-graph-up-arrow","Growth-rate analysis","The change in people count between analysed frames is tracked; a sharp surge escalates risk by one level."),
+    ("bi-speedometer2","Risk assessment","Five levels - SAFE, LOW, MEDIUM, HIGH, CRITICAL - from transparent, configurable thresholds."),
+    ("bi-thermometer-half","Heatmap","A decaying heat overlay highlights where crowding persists."),
+    ("bi-camera-video","CCTV monitoring","Webcam, RTSP CCTV and IP-camera streams with a live annotated preview, People / Density / Growth / Risk cards and a live chart."),
+    ("bi-broadcast","Fluvio streaming","Optional producer/consumer streaming for live frames, with automatic direct-mode fallback."),
+    ("bi-bell","Early alerts","HIGH and CRITICAL alerts email admins and active, location-matched authorities, with a cooldown to prevent flooding."),
+    ("bi-clipboard-check","Delivery tracking","Every alert records each recipient and whether the email was Sent or Failed; failures can be retried."),
+    ("bi-geo-alt","Incident map","Leaflet + OpenStreetMap map of admin-registered locations, with incident details and notification status."),
+    ("bi-people","Authority management","Admins maintain police, traffic police, security and emergency contacts and the zones they cover."),
+    ("bi-shield-lock","Secure access","Roles (admin / user), email OTP two-factor login, email-verified registration and CSRF protection."),
+    ("bi-file-earmark-pdf","PDF reports","One-click report with statistics and risk summary for any analysed video."),
+    ("bi-phone","Responsive interface","Works on desktop, laptop, tablet and mobile.")] %}
+  <div class="col-md-6 col-lg-4"><div class="feature-card">
+    <div class="feature-icon"><i class="bi {{ icon }}"></i></div><h5>{{ t }}</h5><p class="text-muted-soft small mb-0">{{ d }}</p>
+  </div></div>
+  {% endfor %}
+</div></div></section>
+{% endblock %}
