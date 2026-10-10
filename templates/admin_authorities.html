@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Authority Management — StampedeGuard{% endblock %}
+{% block page_title %}Authority Management{% endblock %}
+{% block page_sub %}Register and manage police, security and emergency response contacts{% endblock %}
+
+{% block content %}
+
+<!-- STATS CARDS (real DB counts, computed server-side) -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-lg-3">
+    <div class="glass-card text-center py-3">
+      <div class="small text-muted-soft">Total Authorities</div>
+      <div class="mono" style="font-size:1.6rem;">{{ stats.total }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="glass-card text-center py-3">
+      <div class="small text-muted-soft">Active</div>
+      <div class="mono" style="font-size:1.6rem; color:#28a745;">{{ stats.active }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="glass-card text-center py-3">
+      <div class="small text-muted-soft">Police</div>
+      <div class="mono" style="font-size:1.6rem;">{{ stats.police }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="glass-card text-center py-3">
+      <div class="small text-muted-soft">Traffic Police</div>
+      <div class="mono" style="font-size:1.6rem;">{{ stats.traffic_police }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass-card">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Registered Authorities</h5>
+    <button type="button" class="btn btn-gradient btn-sm" data-bs-toggle="modal" data-bs-target="#authorityModal" onclick="openAddAuthorityModal()">
+      <i class="bi bi-plus-circle me-1"></i>Add Authority
+    </button>
+  </div>
+
+  <!-- SEARCH + FILTER -->
+  <form method="GET" class="row g-2 mb-3">
+    <div class="col-md-5">
+      <input type="text" name="q" class="form-control form-control-sm" placeholder="Search name, email, department…" value="{{ current_search }}">
+    </div>
+    <div class="col-md-3">
+      <select name="role" class="form-select form-select-sm">
+        <option value="">All Roles</option>
+        {% for r in role_choices %}
+          <option value="{{ r }}" {% if current_role_filter == r %}selected{% endif %}>{{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="status" class="form-select form-select-sm">
+        <option value="">All Status</option>
+        <option value="active" {% if current_status_filter == 'active' %}selected{% endif %}>Active</option>
+        <option value="inactive" {% if current_status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-outline-glass btn-sm w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-glass align-middle">
+      <thead>
+        <tr>
+          <th>Name</th><th>Role</th><th>Department</th><th>Email</th>
+          <th>Location</th><th>Status</th><th>Alerts</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in authorities %}
+        <tr>
+          <td>{{ a.name }}</td>
+          <td><span class="badge bg-secondary">{{ a.role }}</span></td>
+          <td class="text-muted-soft">{{ a.department or "—" }}</td>
+          <td class="text-muted-soft small">{{ a.email }}</td>
+          <td class="text-muted-soft">{{ a.location_area or "All zones" }}</td>
+          <td>
+            {% if a.is_active %}
+              <span class="risk-badge risk-SAFE">ACTIVE</span>
+            {% else %}
+              <span class="risk-badge risk-CRITICAL">INACTIVE</span>
+            {% endif %}
+          </td>
+          <td class="mono small">{{ alert_counts.get(a.id, 0) }}</td>
+          <td class="text-nowrap">
+            <button type="button" class="btn btn-sm btn-outline-glass" title="Edit"
+                    data-bs-toggle="modal" data-bs-target="#authorityModal"
+                    onclick='openEditAuthorityModal({{ {"id": a.id, "name": a.name, "role": a.role, "department": a.department or "", "email": a.email, "phone": a.phone or "", "location_area": a.location_area or "", "is_active": a.is_active}|tojson }})'>
+              <i class="bi bi-pencil"></i>
+            </button>
+            <form method="POST" action="{{ url_for('admin_authority_toggle', authority_id=a.id) }}" class="d-inline">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-glass" title="{{ 'Deactivate' if a.is_active else 'Activate' }}">
+                <i class="bi {{ 'bi-toggle-on' if a.is_active else 'bi-toggle-off' }}"></i>
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_authority_delete', authority_id=a.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete authority {{ a.name }}? This cannot be undone.');">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-sm btn-outline-glass text-danger" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted-soft py-4">No authorities match your search/filter.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL (shared; JS switches between add and edit mode) -->
+<div class="modal fade" id="authorityModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" id="authorityForm">
+        {{ add_form.hidden_tag() }}
+        <div class="modal-header">
+          <h5 class="modal-title" id="authorityModalTitle">Add Authority</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            {{ add_form.name.label(class="form-label small") }}
+            {{ add_form.name(class="form-control", id="authority_name") }}
+          </div>
+          <div class="mb-3">
+            {{ add_form.role.label(class="form-label small") }}
+            {{ add_form.role(class="form-select", id="authority_role") }}
+          </div>
+          <div class="mb-3">
+            {{ add_form.department.label(class="form-label small") }}
+            {{ add_form.department(class="form-control", id="authority_department") }}
+          </div>
+          <div class="mb-3">
+            {{ add_form.email.label(class="form-label small") }}
+            {{ add_form.email(class="form-control", id="authority_email") }}
+          </div>
+          <div class="mb-3">
+            {{ add_form.phone.label(class="form-label small") }}
+            {{ add_form.phone(class="form-control", id="authority_phone") }}
+          </div>
+          <div class="mb-3">
+            {{ add_form.location_area.label(class="form-label small") }}
+            {{ add_form.location_area(class="form-control", id="authority_location_area", list="zoneOptions", placeholder="Registered location - blank = all zones") }}
+            <datalist id="zoneOptions">{% for n in location_names %}<option value="{{ n }}">{% endfor %}</datalist>
+          </div>
+          <div class="form-check">
+            {{ add_form.is_active(class="form-check-input", id="authority_is_active") }}
+            {{ add_form.is_active.label(class="form-check-label small") }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-glass" data-bs-dismiss="modal">Cancel</button>
+          {{ add_form.submit(class="btn btn-gradient") }}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openAddAuthorityModal() {
+    document.getElementById('authorityModalTitle').textContent = 'Add Authority';
+    document.getElementById('authorityForm').action = "{{ url_for('admin_authority_add') }}";
+    document.getElementById('authorityForm').reset();
+    document.getElementById('authority_is_active').checked = true;
+  }
+
+  function openEditAuthorityModal(data) {
+    document.getElementById('authorityModalTitle').textContent = 'Edit Authority';
+    document.getElementById('authorityForm').action = '/admin/authorities/' + data.id + '/edit';
+    document.getElementById('authority_name').value = data.name;
+    document.getElementById('authority_role').value = data.role;
+    document.getElementById('authority_department').value = data.department;
+    document.getElementById('authority_email').value = data.email;
+    document.getElementById('authority_phone').value = data.phone;
+    document.getElementById('authority_location_area').value = data.location_area;
+    document.getElementById('authority_is_active').checked = data.is_active;
+  }
+</script>
+{% endblock %}

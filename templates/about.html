@@ -1,0 +1,60 @@
+{% extends "public_base.html" %}
+{% block title %}About — {{ site.name }}{% endblock %}
+{% block content %}
+<section class="page-hero"><div class="container">
+  <h1 class="brand-font">About the project</h1>
+  <p>An AI-based real-time stampede prediction and alert system for event security, transport hubs and public gatherings.</p>
+</div></section>
+
+<section class="section"><div class="container">
+  <div class="row g-4">
+    <div class="col-lg-6"><div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-exclamation-triangle"></i></div>
+      <h4>Problem statement</h4>
+      <p class="text-muted-soft mb-0">Crowd crushes and stampedes at pilgrimages, concerts, stadiums and stations often develop within minutes. Monitoring is usually manual: an operator watching CCTV screens notices danger only after a crowd is already visibly overcrowded, and alerting responders depends on further human steps.</p>
+    </div></div>
+    <div class="col-lg-6"><div class="feature-card">
+      <div class="feature-icon"><i class="bi bi-lightbulb"></i></div>
+      <h4>Solution</h4>
+      <p class="text-muted-soft mb-0">{{ site.name }} continuously analyses video, measures where the crowd is densest and how fast it is growing, classifies the situation into five risk levels, and automatically notifies administrators and location-matched responders when risk reaches HIGH or CRITICAL - recording exactly who was notified and whether delivery succeeded.</p>
+    </div></div>
+  </div>
+
+  <h3 class="mt-5 mb-3 brand-font">Project overview</h3>
+  <p class="text-muted-soft">The platform has two operating modes that share one detection and risk pipeline: <strong>video analysis</strong> for uploaded footage, and <strong>live monitoring</strong> for webcam, RTSP CCTV and IP cameras. Results are stored in a database, shown on a dashboard and map, exported as PDF reports, and routed to responders through an admin-managed authority directory.</p>
+
+  <h3 class="mt-5 mb-3 brand-font">Objectives</h3>
+  <div class="row g-3">
+    {% for o in ["Detect and count people in video automatically","Measure localised crowd density, not only a headcount","Use crowd growth rate as an early-warning signal","Classify risk as SAFE, LOW, MEDIUM, HIGH or CRITICAL","Alert the right responders quickly and track delivery","Show monitored locations and incidents on a map"] %}
+    <div class="col-md-6"><div class="d-flex gap-2"><i class="bi bi-check-circle-fill" style="color:var(--accent-teal);"></i><span>{{ o }}</span></div></div>
+    {% endfor %}
+  </div>
+
+  <h3 class="mt-5 mb-3 brand-font">Innovation</h3>
+  <div class="row g-4">
+    {% for icon,t,d in [
+      ("bi-graph-up-arrow","Growth-rate-augmented risk","Risk depends on how quickly the crowd is growing as well as how dense it is, so a rapidly compressing crowd is flagged earlier."),
+      ("bi-diagram-3","One pipeline, two modes","Recorded and live video use the same detection and scoring code, so behaviour verified on footage carries over to live use."),
+      ("bi-shield-check","Fault-tolerant streaming","Live frames can flow through Fluvio; if the broker is unavailable the system falls back to direct processing automatically."),
+      ("bi-people","Location-aware alert routing","Responders are matched to the zone of the camera that raised the alert, with per-recipient Sent / Failed status.")] %}
+    <div class="col-md-6"><div class="feature-card"><div class="feature-icon"><i class="bi {{ icon }}"></i></div><h5>{{ t }}</h5><p class="text-muted-soft small mb-0">{{ d }}</p></div></div>
+    {% endfor %}
+  </div>
+
+  <div class="callout callout-note mt-5">
+    <strong>Scope and honesty note.</strong> The risk assessment is a transparent <em>rule-based</em> model built from crowd density and growth rate; it is not a trained deep-learning risk classifier. People detection uses a pretrained YOLO26 model. A tool for measuring accuracy on labelled footage is included, but no evaluation results are published here yet.
+  </div>
+
+  <h3 class="mt-5 mb-3 brand-font">Team &amp; project information</h3>
+  <div class="glass-card">
+    {% if site.team_name or site.team_members or site.institution %}
+      {% if site.team_name %}<p class="mb-1"><strong>Team:</strong> {{ site.team_name }}</p>{% endif %}
+      {% if site.team_members %}<p class="mb-1"><strong>Members:</strong> {{ site.team_members|join(", ") }}</p>{% endif %}
+      {% if site.institution %}<p class="mb-1"><strong>Institution:</strong> {{ site.institution }}</p>{% endif %}
+    {% else %}
+      <p class="mb-1 text-muted-soft">Final-year AI/ML project.</p>
+    {% endif %}
+    {% if site.github %}<p class="mb-0 mt-2"><a href="{{ site.github }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1"></i>Source code on GitHub</a></p>{% endif %}
+  </div>
+</div></section>
+{% endblock %}

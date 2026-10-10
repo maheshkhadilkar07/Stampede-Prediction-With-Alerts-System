@@ -1,0 +1,70 @@
+{% extends "officer/base.html" %}
+{% block title %}Your log{% endblock %}
+
+{% block content %}
+
+  <h2 class="section-head">Assignments you took</h2>
+  {% if dispatches %}
+    <ul class="log">
+      {% for d in dispatches %}
+        <li>
+          <a class="log-row" href="{{ url_for('officer.dispatch_detail', dispatch_id=d.id) }}">
+            <span class="log-main">
+              <span class="log-title">{{ d.location_name or 'Unnamed location' }}</span>
+              <span class="log-sub">
+                {{ d.created_at|localtime('%d %b, %H:%M') }}
+                {%- if d.response_seconds is not none %}
+                  &middot; accepted in <span class="num">{{ d.response_seconds }}s</span>
+                {%- endif %}
+              </span>
+            </span>
+            <span class="tag {% if d.status == 'RESOLVED' %}resolved{% elif d.is_claimed %}live{% endif %}">
+              {{ d.status|replace('_', ' ')|title }}
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="standby">
+      <div class="standby-title">Nothing yet</div>
+      <p>Assignments you accept will be listed here.</p>
+    </div>
+  {% endif %}
+
+  {# Shown deliberately. An officer should be able to see their own response
+     record rather than only their successes - and a run of timeouts is
+     usually a signal about notifications or signal strength, not effort. #}
+  {% if missed %}
+    <h2 class="section-head">Offered to you, handled by someone else</h2>
+    <ul class="log">
+      {% for offer in missed %}
+        <li class="log-row">
+          <span class="log-main">
+            <span class="log-title">
+              {{ offer.dispatch.location_name or 'Unnamed location' }}
+            </span>
+            <span class="log-sub">
+              {{ offer.offered_at|localtime('%d %b, %H:%M') }}
+              {%- if offer.distance_km is not none %}
+                &middot; <span class="num">{{ '%.1f'|format(offer.distance_km) }} km</span> away
+              {%- endif %}
+            </span>
+          </span>
+          <span class="tag missed">
+            {{ 'Passed' if offer.status == 'DECLINED' else 'No answer' }}
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+{% endblock %}
+
+{% block actions %}
+  <div class="actions">
+    <div class="actions-inner">
+      <a class="btn btn-wide" href="{{ url_for('officer.home') }}">Back to duty screen</a>
+    </div>
+  </div>
+{% endblock %}

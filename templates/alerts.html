@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Alert History — StampedeGuard{% endblock %}
+{% block page_title %}Alert History{% endblock %}
+{% block page_sub %}Every HIGH/CRITICAL alert and its delivery status{% endblock %}
+
+{% block content %}
+
+<div class="glass-card mb-3">
+  <form method="GET" class="row g-2 align-items-end">
+    <div class="col-6 col-md-2">
+      <label class="form-label small text-muted-soft">Risk Level</label>
+      <select name="risk" class="form-select form-select-sm">
+        <option value="">All</option>
+        {% for level in ["HIGH", "CRITICAL"] %}
+          <option value="{{ level }}" {% if current_risk == level %}selected{% endif %}>{{ level }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small text-muted-soft">Location</label>
+      <select name="location" class="form-select form-select-sm">
+        <option value="">All</option>
+        {% for loc in location_options %}
+          <option value="{{ loc }}" {% if current_location == loc %}selected{% endif %}>{{ loc }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small text-muted-soft">Delivery Status</label>
+      <select name="status" class="form-select form-select-sm">
+        <option value="">All</option>
+        <option value="sent" {% if current_status == 'sent' %}selected{% endif %}>Sent</option>
+        <option value="failed" {% if current_status == 'failed' %}selected{% endif %}>Failed</option>
+        <option value="pending" {% if current_status == 'pending' %}selected{% endif %}>Pending</option>
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small text-muted-soft">From</label>
+      <input type="date" name="date_from" class="form-control form-control-sm" value="{{ current_date_from }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small text-muted-soft">To</label>
+      <input type="date" name="date_to" class="form-control form-control-sm" value="{{ current_date_to }}">
+    </div>
+    <div class="col-6 col-md-2">
+      <button type="submit" class="btn btn-outline-glass btn-sm w-100"><i class="bi bi-funnel me-1"></i>Filter</button>
+    </div>
+  </form>
+</div>
+
+{% if not alerts %}
+  <div class="glass-card text-center py-5 text-muted-soft">
+    <i class="bi bi-bell-slash" style="font-size:2rem;"></i>
+    <div class="mt-2">No alerts match your filters.</div>
+  </div>
+{% endif %}
+
+{% for alert in alerts %}
+<div class="glass-card mb-3">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+    <div>
+      <span class="risk-badge risk-{{ alert.risk_level }}">{{ alert.risk_level }}</span>
+      <strong class="ms-2">{{ alert.video.location_name or alert.video.original_filename }}</strong>
+      <div class="text-muted-soft small mt-1">
+        Alert #{{ alert.id }} · {{ alert.created_at|localtime('%d %b %Y, %H:%M:%S') if alert.created_at else '—' }} {{ site.timezone }}
+        {% if alert.person_count is not none %} · {{ alert.person_count }} people{% endif %}
+        {% if alert.max_cell_density is not none %} · density {{ "%.1f"|format(alert.max_cell_density) }}/cell{% endif %}
+        {% if alert.growth_rate is not none %} · growth {{ "%.0f"|format(alert.growth_rate * 100) }}%{% endif %}
+      </div>
+    </div>
+    <div class="text-end">
+      {% if current_user.is_admin and alert.deliveries|selectattr('status','equalto','failed')|list %}
+        <form method="POST" action="{{ url_for('alert_retry', alert_id=alert.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-sm btn-outline-glass me-1"><i class="bi bi-arrow-repeat me-1"></i>Retry failed</button>
+        </form>
+      {% endif %}
+      {% if alert.notified %}
+        <span class="badge bg-success">At least 1 delivered</span>
+      {% else %}
+        <span class="badge bg-danger">No successful delivery</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="text-muted-soft small mb-2">{{ alert.message }}</div>
+
+  {% if alert.deliveries %}
+  <div class="recipient-list">
+    {% for d in alert.deliveries %}
+      <div class="small">
+        {% if d.status == "sent" %}
+          <span class="text-success">&#10003;</span>
+        {% elif d.status == "failed" %}
+          <span class="text-danger">&#10007;</span>
+        {% else %}
+          <span class="text-muted-soft">&#8230;</span>
+        {% endif %}
+        <strong>{{ d.recipient_name }}</strong>
+        <span class="text-muted-soft">({{ d.recipient_type|capitalize }})</span>
+        —
+        {% if d.status == "sent" %}Sent{% elif d.status == "failed" %}Failed{% else %}Pending{% endif %}
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    {% if email_enabled %}
+      <div class="text-muted-soft small fst-italic">No delivery was recorded for this alert — it likely fired before email was configured, or there were no admins/officers/authorities with an email at the time. Alerts <strong>are enabled</strong>; trigger a new alert to test, or use "Retry failed" above.</div>
+    {% else %}
+      <div class="text-warning small fst-italic">Email alerting is currently <strong>disabled</strong> (set <code>ALERT_EMAIL_ENABLED=true</code> in <code>.env</code> and restart), so no one was notified for this alert.</div>
+    {% endif %}
+  {% endif %}
+</div>
+{% endfor %}
+
+{% endblock %}

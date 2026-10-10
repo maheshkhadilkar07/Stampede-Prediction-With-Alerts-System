@@ -1,0 +1,34 @@
+Flask==3.0.3
+Werkzeug==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+WTForms==3.1.2
+email_validator==2.2.0
+ultralytics==8.4.115  # required for YOLO26 support
+opencv-python==4.10.0.84
+numpy==1.26.4
+pandas==2.2.2
+tensorflow==2.17.0
+Pillow==10.4.0
+python-dotenv==1.0.1
+reportlab==4.2.2
+
+# --- Evaluation module (real Accuracy/Precision/Recall/F1 for the paper) ---
+scikit-learn==1.5.2
+matplotlib==3.9.2
+
+# --- Field-officer dispatch: background push notifications ----------------
+# OPTIONAL. Officer dispatch works without it — the officer app polls for
+# offers every few seconds while it is open. Installing this is what lets a
+# phone ring while the app is closed. If the import is missing,
+# dispatch/push.py degrades to polling instead of raising.
+# Generate the key pair once with scripts/generate_vapid_keys.py, then put
+# VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY in .env.
+pywebpush==2.0.3
+
+# NOTE: The optional Fluvio live-streaming client is NOT listed here on
+# purpose — it's a compiled Rust extension with no native Windows wheel
+# and will fail to build on plain Windows. See requirements-fluvio.txt
+# and the README's "Live CCTV / Fluvio streaming" section (install it
+# inside WSL2 if you want real Fluvio streaming instead of direct mode).

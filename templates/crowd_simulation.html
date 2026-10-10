@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Crowd Simulation — StampedeGuard{% endblock %}
+{% block page_title %}Crowd Crush Simulation{% endblock %}
+{% block page_sub %}Add people, gates and officers — watch a crush form and officers get paged{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+  .sim-stage { position: relative; width: 100%; height: 460px; border-radius: 12px; overflow: hidden;
+               background: #eef2f8; border: 1px solid var(--border-glass); cursor: crosshair; }
+  .sim-stage canvas { display: block; width: 100%; height: 100%; }
+  #sim-3d { position: absolute; inset: 0; }
+  .sim-metric { text-align: center; }
+  .sim-metric .v { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+  .sim-metric .l { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-family: var(--font-mono); }
+  .sim-toolbar .btn { margin: 2px; }
+  .place-btn.active { background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal)); color:#fff; }
+  .sim-note { font-size: 0.9rem; color: var(--text-muted); }
+  .slider-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .slider-row label { font-size:0.8rem; min-width:68px; color:var(--text-muted); }
+  .slider-row output { font-family:var(--font-mono); min-width:34px; text-align:right; }
+  #alert-status { font-size:0.82rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="glass-card">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <h5 class="mb-0"><i class="bi bi-easel me-2"></i>Live Crowd Simulation</h5>
+        <div class="btn-group" role="group">
+          <button type="button" id="mode-2d" class="btn btn-sm btn-gradient">2D top-down</button>
+          <button type="button" id="mode-3d" class="btn btn-sm btn-outline-glass">3D view</button>
+        </div>
+      </div>
+
+      <div class="sim-stage" id="sim-stage">
+        <canvas id="sim-2d"></canvas>
+        <div id="sim-3d" style="display:none;"></div>
+      </div>
+
+      <div class="mt-3">
+        <span class="sim-note me-2">Click the map to place:</span>
+        <div class="btn-group btn-group-sm" role="group" id="place-group">
+          <button type="button" class="btn btn-outline-glass place-btn active" data-mode="off">Off</button>
+          <button type="button" class="btn btn-outline-glass place-btn" data-mode="person"><i class="bi bi-person"></i> Person</button>
+          <button type="button" class="btn btn-outline-glass place-btn" data-mode="officer"><i class="bi bi-person-badge"></i> Officer</button>
+          <button type="button" class="btn btn-outline-glass place-btn" data-mode="gate"><i class="bi bi-door-open"></i> Gate</button>
+        </div>
+        <span class="sim-note ms-2" id="place-hint"></span>
+      </div>
+
+      <div class="sim-toolbar mt-3 d-flex flex-wrap">
+        <button id="sim-play" class="btn btn-sm btn-gradient"><i class="bi bi-pause-fill me-1"></i>Pause</button>
+        <button id="sim-surge" class="btn btn-sm btn-outline-glass text-danger"><i class="bi bi-exclamation-octagon me-1"></i>Trigger stampede</button>
+        <button id="sim-reset" class="btn btn-sm btn-outline-glass"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
+        <div class="form-check form-switch d-flex align-items-center ms-2">
+          <input class="form-check-input me-2" type="checkbox" id="sim-inflow" checked>
+          <label class="form-check-label small text-muted-soft" for="sim-inflow">Maintain crowd (inflow)</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="glass-card mb-3">
+      <h6 class="mb-3"><i class="bi bi-sliders me-2"></i>Scene controls</h6>
+      <div class="slider-row">
+        <label for="sl-people">People</label>
+        <input type="range" class="form-range" id="sl-people" min="0" max="500" step="10" value="120">
+        <output id="out-people">120</output>
+      </div>
+      <div class="slider-row">
+        <label for="sl-officers">Officers</label>
+        <input type="range" class="form-range" id="sl-officers" min="0" max="30" step="1" value="4">
+        <output id="out-officers">4</output>
+      </div>
+      <div class="slider-row">
+        <label for="sl-gates">Gates</label>
+        <input type="range" class="form-range" id="sl-gates" min="1" max="8" step="1" value="1">
+        <output id="out-gates">1</output>
+      </div>
+      <div class="sim-note">Fewer gates for more people → a crush builds. Add gates to relieve it. Officers move to the hotspot once risk hits HIGH.</div>
+    </div>
+
+    <div class="glass-card mb-3">
+      <h6 class="mb-3"><i class="bi bi-activity me-2"></i>Live Analysis</h6>
+      <div class="row g-2">
+        <div class="col-4 sim-metric"><div class="v" id="sim-count">0</div><div class="l">People</div></div>
+        <div class="col-4 sim-metric"><div class="v" id="sim-density">0</div><div class="l">Peak /cell</div></div>
+        <div class="col-4 sim-metric"><div class="v" id="sim-growth">0%</div><div class="l">Growth</div></div>
+        <div class="col-4 sim-metric"><div class="v"><span id="sim-risk" class="risk-badge risk-SAFE">SAFE</span></div><div class="l">Risk</div></div>
+        <div class="col-4 sim-metric"><div class="v" id="sim-officers">0/0</div><div class="l">On scene</div></div>
+        <div class="col-4 sim-metric"><div class="v" id="sim-gates">1</div><div class="l">Gates</div></div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="alert-toggle" role="switch">
+        <label class="form-check-label" for="alert-toggle"><b>Send alerts to officers</b></label>
+      </div>
+      <div class="sim-note">Off by default. When on and the sim hits <b>HIGH/CRITICAL</b>, it pages a real
+        on-duty officer through the dispatch engine ({% if dispatch_enabled %}dispatch is ON{% else %}dispatch is OFF — email only{% endif %})
+        and records the incident, labelled as a <b>Simulation Drill</b>.</div>
+      <div id="alert-status" class="mt-2 text-muted-soft">Alerts off.</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="{{ url_for('static', filename='js/crowd_simulation.js') }}"></script>
+<script>
+(function () {
+  var S = window.StampedeSim;
+  var model = new S.CrowdModel({ initial: 120 });
+  model.setOfficers(4);
+
+  var canvas = document.getElementById("sim-2d");
+  var container3d = document.getElementById("sim-3d");
+  var r2d = new S.Renderer2D(canvas, model);
+  var r3d = null, mode = "2d", playing = true, inflow = true, placeMode = "off";
+  var peopleTarget = 120, inflowAcc = 0;
+  var CSRF = (document.querySelector('meta[name=csrf-token]') || {}).content || "";
+
+  r2d.resize();
+  window.addEventListener("resize", function () { if (mode === "2d") r2d.resize(); else if (r3d) r3d.resize(); });
+  function el(id) { return document.getElementById(id); }
+
+  el("sl-people").addEventListener("input", function (e) {
+    peopleTarget = +e.target.value; el("out-people").textContent = peopleTarget; model.setPeople(peopleTarget);
+  });
+  el("sl-officers").addEventListener("input", function (e) {
+    el("out-officers").textContent = e.target.value; model.setOfficers(+e.target.value);
+  });
+  el("sl-gates").addEventListener("input", function (e) {
+    el("out-gates").textContent = e.target.value; model.setGates(+e.target.value);
+  });
+
+  document.querySelectorAll(".place-btn").forEach(function (b) {
+    b.addEventListener("click", function () {
+      placeMode = b.getAttribute("data-mode");
+      document.querySelectorAll(".place-btn").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      el("place-hint").textContent = (mode === "3d" && placeMode !== "off") ? "Switch to 2D to place by clicking." : "";
+    });
+  });
+  canvas.addEventListener("click", function (ev) {
+    if (mode !== "2d" || placeMode === "off") return;
+    var rect = canvas.getBoundingClientRect();
+    var p = r2d.canvasToModel(ev.clientX - rect.left, ev.clientY - rect.top);
+    if (placeMode === "person") {
+      model.addPerson(p.x, p.y); peopleTarget = model.people.length;
+      el("sl-people").value = Math.min(500, peopleTarget); el("out-people").textContent = model.people.length;
+    } else if (placeMode === "officer") {
+      model.addOfficer(p.x, p.y); el("sl-officers").value = Math.min(30, model.officers.length); el("out-officers").textContent = model.officers.length;
+    } else if (placeMode === "gate") {
+      model.addGate(p.x, p.y); el("sl-gates").value = Math.min(8, model.gates.length); el("out-gates").textContent = model.gates.length;
+    }
+  });
+
+  el("sim-play").addEventListener("click", function () {
+    playing = !playing;
+    el("sim-play").innerHTML = playing ? '<i class="bi bi-pause-fill me-1"></i>Pause' : '<i class="bi bi-play-fill me-1"></i>Play';
+  });
+  el("sim-surge").addEventListener("click", function () { model.surge(120); });
+  el("sim-reset").addEventListener("click", function () {
+    model.reset(peopleTarget); model.setOfficers(+el("sl-officers").value); model.setGates(+el("sl-gates").value);
+  });
+  el("sim-inflow").addEventListener("change", function (e) { inflow = e.target.checked; });
+
+  var alertsOn = false, lastAlertAt = 0, prevLevel = "SAFE";
+  el("alert-toggle").addEventListener("change", function (e) {
+    alertsOn = e.target.checked;
+    el("alert-status").textContent = alertsOn ? "Alerts ON — officers will be paged on HIGH/CRITICAL." : "Alerts off.";
+    el("alert-status").className = "mt-2 " + (alertsOn ? "text-success" : "text-muted-soft");
+  });
+
+  function maybeAlert(stats) {
+    if (!alertsOn) return;
+    var danger = (stats.riskLevel === "HIGH" || stats.riskLevel === "CRITICAL");
+    if (!danger) { prevLevel = stats.riskLevel; return; }
+    var now = Date.now();
+    var escalated = (prevLevel !== "HIGH" && prevLevel !== "CRITICAL");
+    prevLevel = stats.riskLevel;
+    if (!escalated && now - lastAlertAt < 20000) return;
+    lastAlertAt = now;
+    el("alert-status").textContent = "Sending alert to officers…";
+    el("alert-status").className = "mt-2 text-muted-soft";
+    fetch("/api/crowd-simulation/alert", {
+      method: "POST", headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF },
+      body: JSON.stringify({ risk_level: stats.riskLevel, person_count: stats.count,
+                             density: stats.maxCellDensity, growth_rate: stats.growthRate }),
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d.ok) {
+        var extra = d.dispatch_id ? " · paged officer (dispatch #" + d.dispatch_id + ")"
+                  : (d.dispatch_note ? " · dispatch: " + d.dispatch_note : "");
+        el("alert-status").innerHTML = '<i class="bi bi-check-circle-fill text-success"></i> Alert sent (' +
+          d.notified + '/' + d.recipients + ' emailed)' + extra + '.';
+        el("alert-status").className = "mt-2 text-success";
+      } else if (d.reason === "cooldown") {
+        el("alert-status").textContent = "Cooldown — next alert in " + (d.retry_in || 0) + "s.";
+      } else {
+        el("alert-status").textContent = "Not sent: " + (d.reason || "unknown") + ".";
+      }
+    }).catch(function () { el("alert-status").textContent = "Alert request failed."; });
+  }
+
+  function updateReadouts() {
+    var s = model.stats();
+    el("sim-count").textContent = s.count;
+    el("sim-density").textContent = s.maxCellDensity;
+    el("sim-growth").textContent = Math.round(s.growthRate * 100) + "%";
+    var b = el("sim-risk"); b.textContent = s.riskLevel; b.className = "risk-badge risk-" + s.riskLevel;
+    el("sim-officers").textContent = s.officersOnScene + "/" + s.officersTotal;
+    el("sim-gates").textContent = s.gates;
+    return s;
+  }
+
+  var last = performance.now(), roAcc = 0, alertAcc = 0;
+  function loop(now) {
+    var dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (playing) {
+      model.step(dt);
+      if (inflow) {
+        inflowAcc += dt;
+        while (inflowAcc >= 0.12) { inflowAcc -= 0.12; if (model.people.length < peopleTarget) model.addPerson(); }
+      }
+    }
+    if (mode === "2d") r2d.draw(); else if (r3d) r3d.draw();
+    roAcc += dt; alertAcc += dt;
+    if (roAcc >= 0.15) { roAcc = 0; var s = updateReadouts(); if (alertAcc >= 1.0) { alertAcc = 0; maybeAlert(s); } }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  updateReadouts();
+
+  var btn2d = el("mode-2d"), btn3d = el("mode-3d");
+  function setActive(a) {
+    btn2d.className = "btn btn-sm " + (a ? "btn-gradient" : "btn-outline-glass");
+    btn3d.className = "btn btn-sm " + (a ? "btn-outline-glass" : "btn-gradient");
+  }
+  btn2d.addEventListener("click", function () {
+    mode = "2d"; container3d.style.display = "none"; canvas.style.display = "block";
+    el("sim-stage").style.cursor = "crosshair"; el("place-hint").textContent = ""; setActive(true); r2d.resize();
+  });
+  btn3d.addEventListener("click", function () {
+    if (typeof THREE === "undefined") { alert("3D view needs the Three.js library, which could not be loaded (check your connection). The 2D view works offline."); return; }
+    if (!r3d) r3d = new S.Renderer3D(container3d, model, THREE);
+    mode = "3d"; canvas.style.display = "none"; container3d.style.display = "block";
+    el("sim-stage").style.cursor = "grab";
+    if (placeMode !== "off") el("place-hint").textContent = "Switch to 2D to place by clicking.";
+    setActive(false); r3d.resize();
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,1016 @@
+{% extends "base.html" %}
+
+{#
+  templates/simulation.html
+  =========================
+  A 3D view of the dispatch system, wired to the real engine.
+
+  The scene is deliberately a flat map plane with markers rather than a
+  modelled venue: what dispatch reasons about is coordinates, distances and
+  who is standing where, and a plan view with real metric spacing shows
+  those honestly. A prettier stadium mesh would imply the system knows about
+  walls and stairs, which it does not.
+
+  Everything drawn here is live data from /admin/simulation/api/world. The
+  buttons call the same engine methods an officer's phone calls.
+#}
+
+{% block title %}3D Dispatch Simulation{% endblock %}
+{% block page_title %}3D Dispatch Simulation{% endblock %}
+{% block page_sub %}
+  Live view of camera sites, on-duty officers and incidents &mdash; driving the real dispatch engine.
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  .sim-stage {
+    position: relative;
+    width: 100%;
+    height: 68vh;
+    min-height: 460px;
+    border-radius: .5rem;
+    overflow: hidden;
+    background: #0b1020;
+    border: 1px solid rgba(255, 255, 255, .08);
+  }
+  .sim-stage canvas { display: block; width: 100%; height: 100%; }
+
+  .sim-hud {
+    position: absolute;
+    background: rgba(10, 15, 32, .82);
+    color: #e7ecf7;
+    border: 1px solid rgba(255, 255, 255, .12);
+    border-radius: .45rem;
+    padding: .6rem .7rem;
+    font-size: .78rem;
+    line-height: 1.35;
+    backdrop-filter: blur(3px);
+    max-height: calc(100% - 1.6rem);
+    overflow-y: auto;
+  }
+  .sim-hud h6 {
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .06em;
+    color: #93a4c4; margin: 0 0 .4rem;
+  }
+  .sim-legend  { top: .8rem; left: .8rem; width: 190px; }
+  .sim-incidents { top: .8rem; right: .8rem; width: 290px; }
+  .sim-readout {
+    bottom: .8rem; left: .8rem;
+    font-variant-numeric: tabular-nums; color: #93a4c4;
+  }
+
+  .sim-key { display: flex; align-items: center; gap: .45rem; margin-bottom: .22rem; }
+  .sim-dot { width: .7rem; height: .7rem; border-radius: 50%; flex: 0 0 auto; }
+
+  .sim-card {
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: .35rem;
+    padding: .45rem .5rem;
+    margin-bottom: .45rem;
+    background: rgba(255, 255, 255, .04);
+  }
+  .sim-card .sim-where { font-weight: 600; color: #fff; }
+  .sim-card .sim-meta { color: #93a4c4; font-size: .72rem; }
+  .sim-countdown { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .sim-act {
+    font-size: .7rem; padding: .12rem .42rem; margin: .18rem .18rem 0 0;
+    border-radius: .25rem; border: 1px solid rgba(255,255,255,.25);
+    background: transparent; color: #e7ecf7; cursor: pointer;
+  }
+  .sim-act:hover  { background: rgba(255, 255, 255, .14); }
+  .sim-act:disabled { opacity: .4; cursor: not-allowed; }
+  .sim-act-go   { border-color: #3ddc84; color: #8af0b4; }
+  .sim-act-no   { border-color: #ff6b6b; color: #ffb3b3; }
+
+  .sim-empty { color: #93a4c4; font-style: italic; }
+  .sim-hint  { font-size: .78rem; color: #6c757d; }
+  .sim-scale-note { font-size: .72rem; color: #93a4c4; margin-top: .3rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if not simulation_enabled %}
+  <div class="alert alert-secondary">
+    <strong>The simulation is switched off.</strong>
+    Set <code>SIMULATION_ENABLED=true</code> in <code>.env</code> to enable it.
+    The page still renders, but raising incidents is refused.
+  </div>
+{% endif %}
+
+{% if not settings.dispatch_enabled %}
+  <div class="alert alert-warning">
+    <strong>Dispatch is disabled</strong> (<code>DISPATCH_ENABLED=false</code>), so
+    no officer will be paged by anything you do here. Alerts and email still work
+    as before.
+  </div>
+{% endif %}
+
+{% if location_count == 0 %}
+  <div class="alert alert-info">
+    <strong>No camera locations registered yet</strong>, so there is nowhere to
+    dispatch to and the map below is empty. Either add real sites under
+    <a href="{{ url_for('admin_locations') }}">Admin &rsaquo; Locations</a>, or
+    seed a starter venue with the button below &mdash; those are ordinary
+    location rows you can rename, move or delete afterwards.
+  </div>
+{% endif %}
+
+<div class="sim-stage mb-3" id="stage">
+  <canvas id="scene"></canvas>
+
+  <div class="sim-hud sim-legend">
+    <h6>Legend</h6>
+    <div class="sim-key"><span class="sim-dot" style="background:#4da3ff"></span> Camera site</div>
+    <div class="sim-key"><span class="sim-dot" style="background:#3ddc84"></span> Officer, available</div>
+    <div class="sim-key"><span class="sim-dot" style="background:#ffc542"></span> Offer on phone</div>
+    <div class="sim-key"><span class="sim-dot" style="background:#4dd0e1"></span> Officer en route</div>
+    <div class="sim-key"><span class="sim-dot" style="background:#6b7280"></span> Off duty / stale GPS</div>
+    <div class="sim-key"><span class="sim-dot" style="background:#ff7043"></span> HIGH incident</div>
+    <div class="sim-key"><span class="sim-dot" style="background:#ff3b30"></span> CRITICAL incident</div>
+    <div class="sim-scale-note" id="scaleNote"></div>
+  </div>
+
+  <div class="sim-hud sim-incidents">
+    <h6>Live incidents</h6>
+    <div id="incidentList"><div class="sim-empty">Nothing active.</div></div>
+  </div>
+
+  <div class="sim-hud sim-readout" id="readout">loading&hellip;</div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-geo-alt"></i> Camera sites</span>
+        <span class="badge bg-secondary" id="locCount">{{ location_count }}</span>
+      </div>
+      <div class="card-body">
+        <div class="d-flex gap-2 align-items-end flex-wrap mb-3">
+          <div>
+            <label class="form-label mb-1 small">Risk level</label>
+            <select class="form-select form-select-sm" id="riskLevel" style="width:9rem">
+              {% for level in settings.trigger_levels %}
+                <option value="{{ level }}" {% if level == 'CRITICAL' %}selected{% endif %}>{{ level }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="sim-hint">
+            Click a site on the map or in the list to raise a real incident there.
+          </div>
+        </div>
+
+        <div id="locationList"></div>
+
+        <hr>
+        <h6 class="small text-uppercase text-muted">Seed a demo venue</h6>
+        <p class="sim-hint mb-2">
+          Registers six sites in a ring around a centre point, so there is
+          something to dispatch to on a fresh database.
+        </p>
+        <div class="row g-2 align-items-end">
+          <div class="col-auto">
+            <label class="form-label mb-1 small">Centre latitude</label>
+            <input type="number" step="any" class="form-control form-control-sm"
+                   id="seedLat" value="{{ settings.default_lat }}" style="width:8.5rem">
+          </div>
+          <div class="col-auto">
+            <label class="form-label mb-1 small">Longitude</label>
+            <input type="number" step="any" class="form-control form-control-sm"
+                   id="seedLon" value="{{ settings.default_lon }}" style="width:8.5rem">
+          </div>
+          <div class="col-auto">
+            <label class="form-label mb-1 small">Spread (m)</label>
+            <input type="number" step="50" min="50" max="5000"
+                   class="form-control form-control-sm" id="seedSpread"
+                   value="400" style="width:6.5rem">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-outline-secondary" id="useMyLocation">
+              <i class="bi bi-crosshair"></i> Use my location
+            </button>
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-sm btn-primary" id="seedVenue">Seed venue</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-person-badge"></i> Officers</span>
+        <span class="badge bg-secondary" id="offCount">{{ officer_count }}</span>
+      </div>
+      <div class="card-body">
+        <p class="sim-hint">
+          Demo officers are real officer accounts with an unusable password and
+          an address at the reserved <code>.invalid</code> domain, so they can
+          never be signed into. The engine ranks them exactly as it ranks a
+          real officer. Drag one on the map to move it.
+        </p>
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          <button class="btn btn-sm btn-outline-primary" id="spawnOfficer">
+            <i class="bi bi-plus-lg"></i> Add demo officer
+          </button>
+          <button class="btn btn-sm btn-outline-danger" id="purge">
+            <i class="bi bi-trash"></i> Purge simulated data
+          </button>
+        </div>
+        <div id="officerList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-light border mt-3 small">
+  <strong>What is real here.</strong> Raising an incident calls the same engine
+  method the dispatch board calls: the same nearest-first ranking, the same Web
+  Push notification, the same {{ settings.offer_timeout }}-second countdown, up
+  to {{ settings.max_offers }} officers. If you have a real officer on duty with
+  a phone, that phone rings. Incidents raised here are flagged
+  <code>is_simulated</code> and excluded from the dispatch board's average
+  response time, and &ldquo;Purge&rdquo; removes them.
+  Distances are straight-line, as the engine's own ranking is.
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+{#
+  Three.js, local copy first.
+
+  A presentation should not depend on the venue's Wi-Fi. If
+  static/js/vendor/three.min.js exists it is used; otherwise this falls back
+  to the CDN, and if that is unreachable too the page says so instead of
+  showing a blank rectangle. To vendor it:
+    curl -o static/js/vendor/three.min.js https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js
+#}
+<script src="{{ url_for('static', filename='js/vendor/three.min.js') }}"
+        onerror="window.__threeLocalFailed = true"></script>
+<script>
+  if (window.__threeLocalFailed || typeof THREE === "undefined") {
+    document.write(
+      '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>'
+    );
+  }
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------
+  // STATE
+  // ---------------------------------------------------------------------
+  var world = {{ world | tojson }};
+  var SETTINGS = world.settings;
+  var CSRF = "{{ csrf_token() }}";
+  var BASE = "{{ url_for('simulation.home') }}".replace(/\/$/, "");
+
+  var stage = document.getElementById("stage");
+  var canvas = document.getElementById("scene");
+  var readout = document.getElementById("readout");
+
+  if (typeof THREE === "undefined") {
+    readout.innerHTML =
+      "<strong>3D library did not load.</strong> No internet and no local copy at " +
+      "static/js/vendor/three.min.js. The lists below still work.";
+    renderPanels();
+    return;
+  }
+
+  // ---------------------------------------------------------------------
+  // PROJECTION  (lat/lon -> metres -> scene units)
+  // ---------------------------------------------------------------------
+  // Equirectangular projection about a local origin. Correct to well under a
+  // metre over a few kilometres, which is far below GPS noise, and it keeps
+  // the scene in true metric proportion so the grid can state a real scale.
+  var origin = { lat: SETTINGS.default_lat, lon: SETTINGS.default_lon };
+  var metresPerUnit = 2;
+
+  // Derived from the SAME sphere the engine measures with
+  // (dispatch/geo.py, EARTH_RADIUS_KM = 6371.0088). Using a different Earth
+  // model here would make the metric scale printed on the grid disagree with
+  // the distances the engine reports by about 0.6% north-south - small, but
+  // it would mean the picture and the numbers beside it were computed on
+  // different planets.
+  var M_PER_DEG_LAT = 6371008.8 * Math.PI / 180;   // ≈ 111194.93 m
+
+  function metresPerDegLon(lat) {
+    return M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180);
+  }
+
+  function recomputeProjection() {
+    var pts = [];
+    world.locations.forEach(function (l) { pts.push([l.latitude, l.longitude]); });
+    world.officers.forEach(function (o) {
+      if (o.latitude !== null && o.longitude !== null) pts.push([o.latitude, o.longitude]);
+    });
+    if (!pts.length) { metresPerUnit = 2; return; }
+
+    var latSum = 0, lonSum = 0;
+    pts.forEach(function (p) { latSum += p[0]; lonSum += p[1]; });
+    origin = { lat: latSum / pts.length, lon: lonSum / pts.length };
+
+    // Fit the widest span into ~120 scene units, with a floor so a single
+    // marker does not produce an absurd zoom level.
+    var maxM = 0;
+    pts.forEach(function (p) {
+      var dx = (p[1] - origin.lon) * metresPerDegLon(origin.lat);
+      var dz = (p[0] - origin.lat) * M_PER_DEG_LAT;
+      maxM = Math.max(maxM, Math.abs(dx), Math.abs(dz));
+    });
+    metresPerUnit = Math.max((maxM * 2) / 120, 1.5);
+  }
+
+  function project(lat, lon) {
+    return {
+      x: ((lon - origin.lon) * metresPerDegLon(origin.lat)) / metresPerUnit,
+      // Negative so north points away from the default camera: the scene
+      // reads like a map rather than a mirror image of one.
+      z: -((lat - origin.lat) * M_PER_DEG_LAT) / metresPerUnit,
+    };
+  }
+
+  // ---------------------------------------------------------------------
+  // SCENE
+  // ---------------------------------------------------------------------
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0b1020);
+  scene.fog = new THREE.Fog(0x0b1020, 160, 420);
+
+  var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 2000);
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  scene.add(new THREE.HemisphereLight(0x9fb6ff, 0x16203a, 0.85));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.55);
+  sun.position.set(60, 120, 40);
+  scene.add(sun);
+
+  var ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(1200, 1200),
+    new THREE.MeshStandardMaterial({ color: 0x121a33, roughness: 1, metalness: 0 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.02;
+  scene.add(ground);
+
+  var grid = null;
+  function rebuildGrid() {
+    if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    grid = new THREE.GridHelper(400, 40, 0x2b3a5e, 0x1d2744);
+    scene.add(grid);
+  }
+
+  // Groups so a refresh can replace markers wholesale. At a few dozen
+  // objects this is cheaper in bugs than diffing, and invisible in frame time.
+  var siteGroup = new THREE.Group();
+  var officerGroup = new THREE.Group();
+  var incidentGroup = new THREE.Group();
+  var linkGroup = new THREE.Group();
+  scene.add(siteGroup, officerGroup, incidentGroup, linkGroup);
+
+  var pulsers = [];   // objects animated each frame
+  var pickable = [];  // meshes the mouse can hit
+
+  // ---------------------------------------------------------------------
+  // LABELS
+  // ---------------------------------------------------------------------
+  function makeLabel(text, colour) {
+    var pad = 8, font = 26;
+    var measure = document.createElement("canvas").getContext("2d");
+    measure.font = font + "px system-ui, sans-serif";
+    var w = Math.ceil(measure.measureText(text).width) + pad * 2;
+    var h = font + pad * 2;
+
+    var c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    var ctx = c.getContext("2d");
+    ctx.fillStyle = "rgba(10,15,32,.72)";
+    ctx.fillRect(0, 0, w, h);
+    ctx.font = font + "px system-ui, sans-serif";
+    ctx.fillStyle = colour || "#e7ecf7";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, pad, h / 2);
+
+    var sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: new THREE.CanvasTexture(c), transparent: true, depthTest: false,
+    }));
+    sprite.scale.set(w / 26, h / 26, 1);
+    return sprite;
+  }
+
+  // ---------------------------------------------------------------------
+  // BUILDERS
+  // ---------------------------------------------------------------------
+  var RISK_COLOUR = { CRITICAL: 0xff3b30, HIGH: 0xff7043, MEDIUM: 0xffc542 };
+
+  function clearGroup(group) {
+    while (group.children.length) {
+      var child = group.children.pop();
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (child.material.map) child.material.map.dispose();
+        child.material.dispose();
+      }
+    }
+  }
+
+  function buildSites() {
+    clearGroup(siteGroup);
+    pickable = pickable.filter(function (p) { return p.kind !== "site"; });
+
+    world.locations.forEach(function (loc) {
+      var p = project(loc.latitude, loc.longitude);
+
+      var mast = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.18, 0.18, 3.2, 8),
+        new THREE.MeshStandardMaterial({ color: 0x5b6b8c, roughness: .7 })
+      );
+      mast.position.set(p.x, 1.6, p.z);
+
+      var head = new THREE.Mesh(
+        new THREE.BoxGeometry(1.1, 0.6, 0.6),
+        new THREE.MeshStandardMaterial({
+          color: loc.is_demo ? 0x3b82f6 : 0x4da3ff,
+          emissive: 0x11284d, roughness: .5,
+        })
+      );
+      head.position.set(p.x, 3.4, p.z);
+      head.userData = { kind: "site", id: loc.id, name: loc.name };
+
+      var pad = new THREE.Mesh(
+        new THREE.CircleGeometry(2.1, 28),
+        new THREE.MeshBasicMaterial({
+          color: 0x4da3ff, transparent: true, opacity: .13,
+        })
+      );
+      pad.rotation.x = -Math.PI / 2;
+      pad.position.set(p.x, 0.01, p.z);
+
+      var label = makeLabel(loc.name.replace("[Demo] ", ""), "#cfe0ff");
+      label.position.set(p.x, 5.0, p.z);
+
+      siteGroup.add(mast, head, pad, label);
+      pickable.push({ kind: "site", mesh: head, data: loc });
+    });
+  }
+
+  function officerColour(o) {
+    if (o.holdingOffer) return 0xffc542;
+    if (o.activeStatus) return 0x4dd0e1;
+    if (o.dispatchable) return 0x3ddc84;
+    return 0x6b7280;
+  }
+
+  function buildOfficers() {
+    clearGroup(officerGroup);
+    pickable = pickable.filter(function (p) { return p.kind !== "officer"; });
+
+    world.officers.forEach(function (o) {
+      if (o.latitude === null || o.longitude === null) return;
+      var p = project(o.latitude, o.longitude);
+      var colour = officerColour(o);
+
+      // Cylinder + sphere rather than CapsuleGeometry, which does not exist
+      // in r128.
+      var body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.42, 1.5, 12),
+        new THREE.MeshStandardMaterial({ color: colour, roughness: .55 })
+      );
+      body.position.set(p.x, 0.75, p.z);
+
+      var head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.42, 16, 12),
+        new THREE.MeshStandardMaterial({ color: colour, roughness: .5 })
+      );
+      head.position.set(p.x, 1.85, p.z);
+      head.userData = { kind: "officer", id: o.id };
+
+      officerGroup.add(body, head);
+
+      // A ring marks a demo account, so nobody mistakes one for a real
+      // officer standing in the field.
+      if (o.is_simulated) {
+        var ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.75, 1.0, 24),
+          new THREE.MeshBasicMaterial({
+            color: colour, transparent: true, opacity: .5,
+            side: THREE.DoubleSide,
+          })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(p.x, 0.02, p.z);
+        officerGroup.add(ring);
+      }
+
+      var text = o.username.replace("sim-officer-", "Officer ");
+      if (!o.dispatchable && !o.activeStatus) {
+        text += o.on_duty ? " (stale GPS)" : " (off duty)";
+      }
+      var label = makeLabel(text, "#dfe7f5");
+      label.position.set(p.x, 2.9, p.z);
+      officerGroup.add(label);
+
+      if (o.holdingOffer) {
+        pulsers.push({ obj: head, base: 1.85, amp: 0.22, speed: 6 });
+      }
+      pickable.push({ kind: "officer", mesh: head, data: o });
+    });
+  }
+
+  function buildIncidents() {
+    clearGroup(incidentGroup);
+    clearGroup(linkGroup);
+    pulsers = pulsers.filter(function (p) { return p.keep; });
+
+    world.dispatches.forEach(function (d) {
+      var p = project(d.latitude, d.longitude);
+      var colour = RISK_COLOUR[d.risk_level] || 0xff7043;
+
+      var beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.9, 0.9, 14, 16, 1, true),
+        new THREE.MeshBasicMaterial({
+          color: colour, transparent: true, opacity: .26,
+          side: THREE.DoubleSide,
+        })
+      );
+      beam.position.set(p.x, 7, p.z);
+      incidentGroup.add(beam);
+
+      var core = new THREE.Mesh(
+        new THREE.SphereGeometry(0.8, 18, 14),
+        new THREE.MeshBasicMaterial({ color: colour })
+      );
+      core.position.set(p.x, 1.2, p.z);
+      incidentGroup.add(core);
+      pulsers.push({ obj: core, scale: true, amp: 0.3, speed: 5 });
+
+      var disc = new THREE.Mesh(
+        new THREE.RingGeometry(2.4, 3.1, 36),
+        new THREE.MeshBasicMaterial({
+          color: colour, transparent: true, opacity: .4, side: THREE.DoubleSide,
+        })
+      );
+      disc.rotation.x = -Math.PI / 2;
+      disc.position.set(p.x, 0.03, p.z);
+      incidentGroup.add(disc);
+
+      var tag = makeLabel(d.risk_level + " #" + d.id, "#ffe2d8");
+      tag.position.set(p.x, 9.5, p.z);
+      incidentGroup.add(tag);
+
+      // Line to whoever currently has it: dashed while an offer is pending,
+      // solid once somebody has accepted and is moving.
+      var linkTo = null, dashed = true;
+      if (d.accepted_by_id) { linkTo = d.accepted_by_id; dashed = false; }
+      else {
+        (d.offers || []).forEach(function (of) {
+          if (of.status === "PENDING") linkTo = of.officer_id;
+        });
+      }
+      if (linkTo) {
+        var who = officerById(linkTo);
+        if (who && who.latitude !== null) {
+          var q = project(who.latitude, who.longitude);
+          var geom = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3(q.x, 1.6, q.z),
+            new THREE.Vector3(p.x, 1.6, p.z),
+          ]);
+          var line;
+          if (dashed) {
+            line = new THREE.Line(geom, new THREE.LineDashedMaterial({
+              color: 0xffc542, dashSize: 1.4, gapSize: 0.9, linewidth: 1,
+            }));
+            line.computeLineDistances();   // required, or dashes do not show
+          } else {
+            line = new THREE.Line(geom, new THREE.LineBasicMaterial({
+              color: 0x4dd0e1,
+            }));
+          }
+          linkGroup.add(line);
+        }
+      }
+    });
+  }
+
+  function officerById(id) {
+    for (var i = 0; i < world.officers.length; i++) {
+      if (world.officers[i].id === id) return world.officers[i];
+    }
+    return null;
+  }
+
+  // Decorate officers with what they are currently doing, so the colour
+  // rules live in one place.
+  function annotateOfficers() {
+    world.officers.forEach(function (o) {
+      o.holdingOffer = false;
+      o.activeStatus = null;
+    });
+    world.dispatches.forEach(function (d) {
+      if (d.accepted_by_id) {
+        var a = officerById(d.accepted_by_id);
+        if (a) a.activeStatus = d.status;
+      }
+      (d.offers || []).forEach(function (of) {
+        if (of.status === "PENDING") {
+          var o = officerById(of.officer_id);
+          if (o) o.holdingOffer = true;
+        }
+      });
+    });
+  }
+
+  function rebuildAll() {
+    annotateOfficers();
+    recomputeProjection();
+    rebuildGrid();
+    pulsers = [];
+    buildSites();
+    buildOfficers();
+    buildIncidents();
+    document.getElementById("scaleNote").textContent =
+      "1 grid square ≈ " + Math.round(10 * metresPerUnit) + " m";
+    renderPanels();
+  }
+
+  // ---------------------------------------------------------------------
+  // CAMERA CONTROLS  (hand-rolled: OrbitControls is not on the CDN build)
+  // ---------------------------------------------------------------------
+  var orbit = { target: new THREE.Vector3(0, 0, 0), dist: 150, yaw: -0.6, pitch: 0.95 };
+
+  function applyCamera() {
+    orbit.pitch = Math.max(0.12, Math.min(1.5, orbit.pitch));
+    orbit.dist = Math.max(18, Math.min(600, orbit.dist));
+    camera.position.set(
+      orbit.target.x + orbit.dist * Math.sin(orbit.pitch) * Math.cos(orbit.yaw),
+      orbit.target.y + orbit.dist * Math.cos(orbit.pitch),
+      orbit.target.z + orbit.dist * Math.sin(orbit.pitch) * Math.sin(orbit.yaw)
+    );
+    camera.lookAt(orbit.target);
+  }
+
+  var drag = null;
+  canvas.addEventListener("mousedown", function (e) {
+    drag = { x: e.clientX, y: e.clientY, pan: e.shiftKey || e.button === 2, moved: false };
+  });
+  window.addEventListener("mouseup", function () {
+    if (drag && !drag.moved) handleClick(drag.x, drag.y);
+    drag = null;
+    dragOfficer = null;
+  });
+  window.addEventListener("mousemove", function (e) {
+    if (!drag) return;
+    var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
+    drag.x = e.clientX; drag.y = e.clientY;
+
+    if (dragOfficer) { moveOfficerTo(e.clientX, e.clientY); return; }
+    if (drag.pan) {
+      var k = orbit.dist / 600;
+      orbit.target.x -= (dx * Math.cos(orbit.yaw) + dy * Math.sin(orbit.yaw)) * k;
+      orbit.target.z -= (dx * Math.sin(orbit.yaw) - dy * Math.cos(orbit.yaw)) * k;
+    } else {
+      orbit.yaw += dx * 0.006;
+      orbit.pitch -= dy * 0.006;
+    }
+    applyCamera();
+  });
+  canvas.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    orbit.dist *= (1 + Math.sign(e.deltaY) * 0.09);
+    applyCamera();
+  }, { passive: false });
+  canvas.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+
+  // ---------------------------------------------------------------------
+  // PICKING + DRAGGING OFFICERS
+  // ---------------------------------------------------------------------
+  var ray = new THREE.Raycaster();
+  var dragOfficer = null;
+
+  function pointerNDC(cx, cy) {
+    var r = canvas.getBoundingClientRect();
+    return new THREE.Vector2(
+      ((cx - r.left) / r.width) * 2 - 1,
+      -((cy - r.top) / r.height) * 2 + 1
+    );
+  }
+
+  function pick(cx, cy) {
+    ray.setFromCamera(pointerNDC(cx, cy), camera);
+    var meshes = pickable.map(function (p) { return p.mesh; });
+    var hits = ray.intersectObjects(meshes, false);
+    if (!hits.length) return null;
+    for (var i = 0; i < pickable.length; i++) {
+      if (pickable[i].mesh === hits[0].object) return pickable[i];
+    }
+    return null;
+  }
+
+  canvas.addEventListener("dblclick", function (e) {
+    var hit = pick(e.clientX, e.clientY);
+    if (hit && hit.kind === "officer" && hit.data.is_simulated) {
+      dragOfficer = hit.data;
+      readout.textContent = "Dragging " + hit.data.username + " — release to place.";
+    }
+  });
+
+  function handleClick(cx, cy) {
+    var hit = pick(cx, cy);
+    if (!hit) return;
+    if (hit.kind === "site") raiseAt(hit.data.id, hit.data.name);
+  }
+
+  // Ground-plane intersection, so a dragged officer lands where the cursor
+  // is rather than at a guessed depth.
+  var groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  function moveOfficerTo(cx, cy) {
+    ray.setFromCamera(pointerNDC(cx, cy), camera);
+    var point = new THREE.Vector3();
+    if (!ray.ray.intersectPlane(groundPlane, point)) return;
+    var lat = origin.lat - (point.z * metresPerUnit) / M_PER_DEG_LAT;
+    var lon = origin.lon + (point.x * metresPerUnit) / metresPerDegLon(origin.lat);
+    post("/api/officers/" + dragOfficer.id + "/move",
+         { latitude: lat, longitude: lon }, true);
+  }
+
+  // ---------------------------------------------------------------------
+  // RENDER LOOP
+  // ---------------------------------------------------------------------
+  function resize() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / Math.max(1, h);
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+
+  var clock = new THREE.Clock();
+  function frame() {
+    var t = clock.getElapsedTime();
+    pulsers.forEach(function (p) {
+      if (p.scale) {
+        var s = 1 + Math.sin(t * p.speed) * p.amp;
+        p.obj.scale.setScalar(s);
+      } else {
+        p.obj.position.y = p.base + Math.sin(t * p.speed) * p.amp;
+      }
+    });
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  // ---------------------------------------------------------------------
+  // HTML PANELS
+  // ---------------------------------------------------------------------
+  function esc(s) {
+    var d = document.createElement("div");
+    d.textContent = s === null || s === undefined ? "" : String(s);
+    return d.innerHTML;
+  }
+
+  function renderPanels() {
+    // --- camera sites ---
+    var locHtml = world.locations.length
+      ? world.locations.map(function (l) {
+          return '<div class="d-flex justify-content-between align-items-center py-1 border-bottom">' +
+            '<div><div class="fw-semibold small">' + esc(l.name) + "</div>" +
+            '<div class="text-muted" style="font-size:.72rem">' +
+              l.latitude.toFixed(5) + ", " + l.longitude.toFixed(5) + "</div></div>" +
+            '<button class="btn btn-sm btn-outline-danger sim-raise" data-id="' + l.id +
+              '" data-name="' + esc(l.name) + '">Raise</button></div>';
+        }).join("")
+      : '<div class="text-muted fst-italic small">No sites registered.</div>';
+    document.getElementById("locationList").innerHTML = locHtml;
+    document.getElementById("locCount").textContent = world.locations.length;
+
+    // --- officers ---
+    var offHtml = world.officers.length
+      ? world.officers.map(function (o) {
+          var state = o.activeStatus ? o.activeStatus
+                    : o.holdingOffer ? "offer pending"
+                    : o.dispatchable ? "available"
+                    : o.on_duty ? "stale GPS" : "off duty";
+          return '<div class="d-flex justify-content-between align-items-center py-1 border-bottom">' +
+            '<div><div class="fw-semibold small">' + esc(o.username) +
+              (o.is_simulated ? ' <span class="badge bg-info text-dark">demo</span>' : "") +
+              "</div>" +
+            '<div class="text-muted" style="font-size:.72rem">' + esc(state) +
+              (o.location_age_seconds !== null
+                ? " · fix " + o.location_age_seconds + "s ago" : " · no fix") +
+              "</div></div>" +
+            "<div>" +
+              (o.is_simulated
+                ? '<button class="btn btn-sm btn-outline-secondary sim-duty" data-id="' + o.id +
+                    '">' + (o.on_duty ? "Off duty" : "On duty") + "</button>" +
+                  ' <button class="btn btn-sm btn-outline-danger sim-del" data-id="' + o.id +
+                    '">&times;</button>'
+                : '<span class="text-muted" style="font-size:.7rem">real account</span>') +
+            "</div></div>";
+        }).join("")
+      : '<div class="text-muted fst-italic small">No officer accounts yet.</div>';
+    document.getElementById("officerList").innerHTML = offHtml;
+    document.getElementById("offCount").textContent = world.officers.length;
+
+    renderIncidents();
+  }
+
+  function renderIncidents() {
+    var box = document.getElementById("incidentList");
+    if (!world.dispatches.length) {
+      box.innerHTML = '<div class="sim-empty">Nothing active.</div>';
+      return;
+    }
+    box.innerHTML = world.dispatches.map(function (d) {
+      var pending = null;
+      (d.offers || []).forEach(function (of) {
+        if (of.status === "PENDING") pending = of;
+      });
+      var simHolder = d.accepted_by_id
+        ? (officerById(d.accepted_by_id) || {}).is_simulated : false;
+
+      var html = '<div class="sim-card">' +
+        '<div class="sim-where">' + esc(d.risk_level) + " · #" + d.id +
+          (d.is_simulated ? ' <span class="badge bg-info text-dark">sim</span>' : "") +
+          "</div>" +
+        '<div class="sim-meta">' + esc(d.location_name || "unnamed") +
+          " · " + esc(d.status) + "</div>";
+
+      if (pending) {
+        var who = officerById(pending.officer_id);
+        html += '<div class="sim-meta">offer ' + pending.sequence + "/" +
+          SETTINGS.max_offers + " to " + esc(pending.officer) +
+          (pending.distance_km !== null
+            ? " · " + pending.distance_km.toFixed(2) + " km" : "") +
+          ' · <span class="sim-countdown" data-until="' +
+          (Date.now() + pending.seconds_remaining * 1000) + '">' +
+          pending.seconds_remaining + "s</span></div>";
+        if (who && who.is_simulated) {
+          html += '<button class="sim-act sim-act-go sim-accept" data-id="' + pending.id +
+                  '">Accept</button>' +
+                  '<button class="sim-act sim-act-no sim-decline" data-id="' + pending.id +
+                  '">Decline</button>';
+        } else if (who) {
+          html += '<div class="sim-meta">waiting on a real phone — ' +
+                  'the simulation will not answer for a real officer.</div>';
+        }
+      }
+
+      if (d.accepted_by_id) {
+        html += '<div class="sim-meta">held by ' + esc(d.accepted_by || "?") +
+          (d.response_seconds !== null
+            ? " · accepted in " + d.response_seconds + "s" : "") + "</div>";
+        if (simHolder) {
+          ["EN_ROUTE", "ARRIVED", "RESOLVED"].forEach(function (s) {
+            html += '<button class="sim-act sim-status" data-id="' + d.id +
+                    '" data-status="' + s + '">' + s.replace("_", " ") + "</button>";
+          });
+        }
+      }
+
+      if (d.status === "UNASSIGNED") {
+        html += '<div class="sim-meta">' + esc(d.close_reason || "nobody available") + "</div>";
+      }
+      return html + "</div>";
+    }).join("");
+  }
+
+  // Countdowns tick locally between polls, so the number moves smoothly
+  // instead of jumping every 2.5 seconds.
+  setInterval(function () {
+    document.querySelectorAll(".sim-countdown").forEach(function (el) {
+      var left = Math.max(0, Math.round((+el.dataset.until - Date.now()) / 1000));
+      el.textContent = left + "s";
+      el.style.color = left <= 5 ? "#ff6b6b" : "#ffc542";
+    });
+  }, 250);
+
+  // ---------------------------------------------------------------------
+  // SERVER CALLS
+  // ---------------------------------------------------------------------
+  function post(path, body, quiet) {
+    return fetch(BASE + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF },
+      body: JSON.stringify(body || {}),
+    }).then(function (r) {
+      return r.json().catch(function () { return { ok: false, message: "Bad response." }; });
+    }).then(function (data) {
+      if (!data.ok && !quiet) {
+        readout.innerHTML = '<span style="color:#ff9b9b">' +
+          esc(data.message || data.reason || "Refused.") + "</span>";
+      }
+      return refresh().then(function () { return data; });
+    }).catch(function (err) {
+      readout.innerHTML = '<span style="color:#ff9b9b">' + esc(String(err)) + "</span>";
+    });
+  }
+
+  function refresh() {
+    return fetch(BASE + "/api/world", { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) return;
+        world = data;
+        SETTINGS = data.settings;
+        rebuildAll();
+        var live = world.dispatches.length;
+        var avail = world.officers.filter(function (o) { return o.dispatchable; }).length;
+        readout.textContent = live + " live · " + avail + " officer(s) available · " +
+          (SETTINGS.push_configured ? "push on" : "push off (polling)");
+      })
+      .catch(function () {
+        readout.innerHTML = '<span style="color:#ff9b9b">Lost contact with the server.</span>';
+      });
+  }
+
+  function raiseAt(id, name) {
+    var level = document.getElementById("riskLevel").value;
+    readout.textContent = "Raising " + level + " at " + name + "…";
+    post("/api/raise", { location_id: id, risk_level: level });
+  }
+
+  // ---------------------------------------------------------------------
+  // UI WIRING  (delegated, because the panels are re-rendered on every poll)
+  // ---------------------------------------------------------------------
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("button");
+    if (!t) return;
+
+    if (t.classList.contains("sim-raise"))   raiseAt(+t.dataset.id, t.dataset.name);
+    if (t.classList.contains("sim-accept"))  post("/api/offers/" + t.dataset.id + "/accept", {});
+    if (t.classList.contains("sim-decline")) post("/api/offers/" + t.dataset.id + "/decline", {});
+    if (t.classList.contains("sim-status"))
+      post("/api/dispatches/" + t.dataset.id + "/status", { status: t.dataset.status });
+    if (t.classList.contains("sim-duty"))    post("/api/officers/" + t.dataset.id + "/duty", {});
+    if (t.classList.contains("sim-del"))     post("/api/officers/" + t.dataset.id + "/delete", {});
+  });
+
+  document.getElementById("spawnOfficer").addEventListener("click", function () {
+    // Placed just off the middle of the current view, scattered so repeated
+    // clicks do not stack officers on one pixel.
+    var jitter = (Math.random() - 0.5) * 2;
+    var lat = origin.lat + (jitter * 60) / M_PER_DEG_LAT;
+    var lon = origin.lon + ((Math.random() - 0.5) * 120) / metresPerDegLon(origin.lat);
+    post("/api/officers", { latitude: lat, longitude: lon });
+  });
+
+  document.getElementById("purge").addEventListener("click", function () {
+    if (!confirm(
+      "Remove every simulated incident, demo officer and seeded demo location?\n\n" +
+      "Real incidents, real accounts and locations you registered yourself are kept."
+    )) return;
+    post("/api/purge", {}).then(function (d) {
+      if (d && d.ok) {
+        readout.textContent = "Purged " + d.dispatches_removed + " incident(s), " +
+          d.officers_removed + " demo officer(s), " + d.locations_removed + " demo site(s).";
+      }
+    });
+  });
+
+  document.getElementById("seedVenue").addEventListener("click", function () {
+    post("/api/seed-venue", {
+      latitude: parseFloat(document.getElementById("seedLat").value),
+      longitude: parseFloat(document.getElementById("seedLon").value),
+      spread_m: parseFloat(document.getElementById("seedSpread").value),
+    });
+  });
+
+  document.getElementById("useMyLocation").addEventListener("click", function () {
+    if (!navigator.geolocation) {
+      readout.textContent = "This browser has no geolocation.";
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      document.getElementById("seedLat").value = pos.coords.latitude.toFixed(6);
+      document.getElementById("seedLon").value = pos.coords.longitude.toFixed(6);
+      readout.textContent = "Centre set to your position.";
+    }, function (err) {
+      readout.textContent = "Location refused: " + err.message +
+        " (needs HTTPS away from localhost).";
+    });
+  });
+
+  // ---------------------------------------------------------------------
+  // GO
+  // ---------------------------------------------------------------------
+  resize();
+  rebuildAll();
+  applyCamera();
+  frame();
+  refresh();
+
+  setInterval(refresh, 2500);
+  // Demo officers have no phone to report a position, so this stands in for
+  // one. Without it they would go stale and stop being dispatchable.
+  setInterval(function () { post("/api/heartbeat", {}, true); }, 15000);
+})();
+</script>
+{% endblock %}

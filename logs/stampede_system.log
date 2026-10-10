@@ -1,0 +1,529 @@
+2026-10-10 17:22:01 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-10 17:22:01 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-10 17:22:24 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-10 17:22:24 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-10 17:26:38 | INFO     | __main__ | New user registered (pending email verification): Mahesh (admin)
+2026-10-10 17:26:39 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] register OTP for user_id=1 ('Mahesh'): 415737
+2026-10-10 17:26:50 | INFO     | __main__ | User 'Mahesh' verified their email.
+2026-10-10 17:26:59 | WARNING  | utils.otp_service | [DEV MODE — SMTP not configured] login OTP for user_id=1 ('Mahesh'): 672083
+2026-10-10 17:27:00 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-10-10 17:27:16 | INFO     | __main__ | User 'Mahesh' completed 2FA and logged in.
+2026-10-10 17:30:12 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-10 17:30:12 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-10 17:30:15 | INFO     | dispatch.routes | Dispatch blueprints registered (/officer, /api/officer, /api/push, /admin, /admin/simulation).
+2026-10-10 17:30:15 | INFO     | dispatch.engine | Dispatch engine ready (offer timeout 25s, max 5 officers, radius 15.0km).
+2026-10-10 17:31:11 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: Your StampedeGuard login code
+2026-10-10 17:31:11 | INFO     | utils.otp_service | login OTP emailed to user_id=1.
+2026-10-10 17:31:11 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-10-10 17:31:32 | INFO     | __main__ | User 'Mahesh' completed 2FA and logged in.
+2026-10-10 17:32:27 | INFO     | __main__ | Video uploaded: c1.mp4 -> 20261010_173227_c9d3e9b8.mp4 (id=1)
+2026-10-10 17:32:27 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 17:32:34 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_173227_c9d3e9b8.mp4 (336 frames @ 30.0 fps)
+2026-10-10 17:32:36 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:32:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.40)
+2026-10-10 17:32:44 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:32:46 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:32:50 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.60)
+2026-10-10 17:32:51 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.40)
+2026-10-10 17:32:54 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:32:57 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:33:04 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:33:06 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.75)
+2026-10-10 17:33:16 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.60)
+2026-10-10 17:33:19 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.40)
+2026-10-10 17:33:20 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.40)
+2026-10-10 17:33:21 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:33:21 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_173227_c9d3e9b8.mp4 in 47.28s
+2026-10-10 17:33:21 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 17:33:21 | INFO     | __main__ | Video 1 processed successfully.
+2026-10-10 17:33:50 | INFO     | __main__ | Video uploaded: n3.mp4 -> 20261010_173350_96e570b4.mp4 (id=2)
+2026-10-10 17:33:50 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 17:33:50 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_173350_96e570b4.mp4 (1168 frames @ 30.0 fps)
+2026-10-10 17:33:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:33:55 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:33:57 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:01 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:02 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:34:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:04 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:05 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:34:06 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:07 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:07 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:08 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:09 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:09 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:10 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:10 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:11 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:17 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:18 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:19 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:21 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:22 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:34:23 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:24 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:26 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:27 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:31 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:34:33 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:34:38 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:34:39 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:40 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:34:42 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:46 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:46 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:34:47 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:34:47 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:34:47 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:34:48 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.43)
+2026-10-10 17:34:49 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:34:58 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.43)
+2026-10-10 17:35:00 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:35:01 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:35:01 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:35:02 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:35:08 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:35:11 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:35:24 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:35:38 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:35:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:35:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:35:42 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:35:50 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:35:52 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_173350_96e570b4.mp4 in 121.23s
+2026-10-10 17:35:52 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 17:35:56 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:35:56 | WARNING  | utils.email_alert | HIGH alert: 1/1 recipient notification(s) sent (Uploaded Video: n3.mp4).
+2026-10-10 17:35:56 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:35:56 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:35:56 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:35:56 | WARNING  | dispatch.engine | Alert 1 (HIGH) raised no dispatch: video 2 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:35:56 | WARNING  | dispatch.engine | Alert 2 (HIGH) raised no dispatch: video 2 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:35:56 | WARNING  | dispatch.engine | Alert 3 (HIGH) raised no dispatch: video 2 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:35:56 | WARNING  | dispatch.engine | Alert 4 (HIGH) raised no dispatch: video 2 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:35:56 | INFO     | __main__ | Video 2 processed successfully.
+2026-10-10 17:37:42 | INFO     | __main__ | Authority added: p1 (Police) by 'Mahesh'.
+2026-10-10 17:38:15 | INFO     | __main__ | Authority added: s1 (Security Officer) by 'Mahesh'.
+2026-10-10 17:38:22 | INFO     | __main__ | User 'Mahesh' logged out.
+2026-10-10 17:39:01 | INFO     | __main__ | New user registered (pending email verification): Swapnil (officer)
+2026-10-10 17:39:06 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: Verify your StampedeGuard account
+2026-10-10 17:39:06 | INFO     | utils.otp_service | register OTP emailed to user_id=2.
+2026-10-10 17:39:35 | INFO     | __main__ | User 'Swapnil' verified their email.
+2026-10-10 17:39:52 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: Your StampedeGuard login code
+2026-10-10 17:39:52 | INFO     | utils.otp_service | login OTP emailed to user_id=2.
+2026-10-10 17:39:52 | INFO     | __main__ | Password OK for 'Swapnil'; awaiting OTP verification.
+2026-10-10 17:40:13 | INFO     | __main__ | User 'Swapnil' completed 2FA and logged in.
+2026-10-10 17:41:23 | INFO     | __main__ | User 'Swapnil' logged out.
+2026-10-10 17:41:38 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: Your StampedeGuard login code
+2026-10-10 17:41:38 | INFO     | utils.otp_service | login OTP emailed to user_id=1.
+2026-10-10 17:41:38 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-10-10 17:41:51 | INFO     | __main__ | User 'Mahesh' completed 2FA and logged in.
+2026-10-10 17:42:09 | INFO     | __main__ | Video uploaded: n3.mp4 -> 20261010_174209_c7f2f0f1.mp4 (id=3)
+2026-10-10 17:42:09 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 17:42:10 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_174209_c7f2f0f1.mp4 (1168 frames @ 30.0 fps)
+2026-10-10 17:42:10 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:14 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:42:16 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:20 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:22 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:42:22 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:24 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:42:26 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:27 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:27 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:29 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:29 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:29 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:30 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:31 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:35 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:36 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:36 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:38 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:38 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:42:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:42 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:42:47 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:42:49 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:42:53 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:42:53 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:55 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:55 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:42:56 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:42:58 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:43:00 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:43:01 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:43:01 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:43:01 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:43:02 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:43:03 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.43)
+2026-10-10 17:43:04 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:43:12 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.43)
+2026-10-10 17:43:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:43:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:43:16 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:43:17 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:43:22 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:43:26 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:43:38 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:43:53 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:43:54 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:43:55 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:43:56 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:44:03 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:44:05 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_174209_c7f2f0f1.mp4 in 115.12s
+2026-10-10 17:44:05 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 17:44:09 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:44:11 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:44:12 | INFO     | utils.mailer | Email sent to swapnilborkar1000@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:44:14 | INFO     | utils.mailer | Email sent to tulipspicy@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:44:15 | WARNING  | utils.email_alert | HIGH alert: 4/4 recipient notification(s) sent (Uploaded Video: n3.mp4).
+2026-10-10 17:44:15 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:44:15 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:44:15 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:44:15 | WARNING  | dispatch.engine | Alert 5 (HIGH) raised no dispatch: video 3 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:44:15 | WARNING  | dispatch.engine | Alert 6 (HIGH) raised no dispatch: video 3 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:44:15 | WARNING  | dispatch.engine | Alert 7 (HIGH) raised no dispatch: video 3 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:44:15 | WARNING  | dispatch.engine | Alert 8 (HIGH) raised no dispatch: video 3 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:44:15 | INFO     | __main__ | Video 3 processed successfully.
+2026-10-10 17:45:21 | INFO     | __main__ | User 'Mahesh' logged out.
+2026-10-10 17:45:34 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: Your StampedeGuard login code
+2026-10-10 17:45:34 | INFO     | utils.otp_service | login OTP emailed to user_id=2.
+2026-10-10 17:45:34 | INFO     | __main__ | Password OK for 'Swapnil'; awaiting OTP verification.
+2026-10-10 17:45:50 | INFO     | __main__ | User 'Swapnil' completed 2FA and logged in.
+2026-10-10 17:49:24 | INFO     | __main__ | User 'Swapnil' logged out.
+2026-10-10 17:49:42 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: Your StampedeGuard login code
+2026-10-10 17:49:42 | INFO     | utils.otp_service | login OTP emailed to user_id=1.
+2026-10-10 17:49:42 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-10-10 17:49:56 | INFO     | __main__ | User 'Mahesh' completed 2FA and logged in.
+2026-10-10 17:50:37 | INFO     | __main__ | Authority added: E1 (Event Security) by 'Mahesh'.
+2026-10-10 17:51:13 | INFO     | __main__ | Video uploaded: n3.mp4 -> 20261010_175113_93ac2b0d.mp4 (id=4)
+2026-10-10 17:51:13 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 17:51:15 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_175113_93ac2b0d.mp4 (1168 frames @ 30.0 fps)
+2026-10-10 17:51:15 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:19 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:51:21 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:25 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:26 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:51:27 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:29 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:51:30 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:30 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:31 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:32 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:32 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:32 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:33 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:33 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:38 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:38 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:41 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:51:42 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:43 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:44 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:45 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:51:49 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:51:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:51:55 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:51:55 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:57 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:51:57 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:51:59 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:00 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:52:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:52:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:52:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:04 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:52:04 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:52:05 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.43)
+2026-10-10 17:52:06 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:52:14 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.43)
+2026-10-10 17:52:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:52:18 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:52:19 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:52:25 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:28 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:40 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:52:55 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:52:57 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:58 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:52:59 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:53:07 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:53:08 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_175113_93ac2b0d.mp4 in 113.35s
+2026-10-10 17:53:08 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 17:53:13 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:53:15 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:53:17 | INFO     | utils.mailer | Email sent to swapnilborkar1000@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:53:19 | INFO     | utils.mailer | Email sent to tulipspicy@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:53:19 | WARNING  | utils.email_alert | HIGH alert: 4/4 recipient notification(s) sent (Uploaded Video: n3.mp4).
+2026-10-10 17:53:19 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:53:19 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:53:19 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:53:20 | WARNING  | dispatch.engine | Alert 9 (HIGH) raised no dispatch: video 4 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:53:20 | WARNING  | dispatch.engine | Alert 10 (HIGH) raised no dispatch: video 4 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:53:20 | WARNING  | dispatch.engine | Alert 11 (HIGH) raised no dispatch: video 4 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:53:20 | WARNING  | dispatch.engine | Alert 12 (HIGH) raised no dispatch: video 4 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:53:20 | INFO     | __main__ | Video 4 processed successfully.
+2026-10-10 17:56:10 | INFO     | __main__ | Video uploaded: n3.mp4 -> 20261010_175610_10d4eb56.mp4 (id=5)
+2026-10-10 17:56:10 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 17:56:11 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_175610_10d4eb56.mp4 (1168 frames @ 30.0 fps)
+2026-10-10 17:56:11 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:15 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:56:16 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:20 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:22 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:56:22 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:24 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:56:25 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:26 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:27 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:29 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:29 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:30 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:34 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:35 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:36 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:36 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:56:37 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:45 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:56:47 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:56:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:56:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:52 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:53 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 17:56:54 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:56:56 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:59 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:59 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:56:59 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:57:00 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 17:57:00 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:57:01 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.43)
+2026-10-10 17:57:02 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:57:10 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.43)
+2026-10-10 17:57:13 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:57:13 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 17:57:14 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 17:57:15 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 17:57:21 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:57:24 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 17:57:37 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:57:53 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 17:57:55 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:57:56 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 17:57:57 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 17:58:05 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 17:58:06 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_175610_10d4eb56.mp4 in 115.5s
+2026-10-10 17:58:06 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 17:58:13 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:58:15 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 17:58:15 | WARNING  | utils.email_alert | HIGH alert: 2/2 recipient notification(s) sent (Uploaded Video: n3.mp4).
+2026-10-10 17:58:15 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:58:15 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:58:15 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 17:58:16 | WARNING  | dispatch.engine | Alert 13 (HIGH) raised no dispatch: video 5 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:58:16 | WARNING  | dispatch.engine | Alert 14 (HIGH) raised no dispatch: video 5 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:58:16 | WARNING  | dispatch.engine | Alert 15 (HIGH) raised no dispatch: video 5 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:58:16 | WARNING  | dispatch.engine | Alert 16 (HIGH) raised no dispatch: video 5 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 17:58:16 | INFO     | __main__ | Video 5 processed successfully.
+2026-10-10 18:00:04 | INFO     | __main__ | Authority added: p2 (Police) by 'Mahesh'.
+2026-10-10 18:00:16 | INFO     | __main__ | Authority updated: p2 (id=4) by 'Mahesh'.
+2026-10-10 18:00:45 | INFO     | __main__ | Video uploaded: n3.mp4 -> 20261010_180045_b8bd8c94.mp4 (id=6)
+2026-10-10 18:00:45 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 18:00:45 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_180045_b8bd8c94.mp4 (1168 frames @ 30.0 fps)
+2026-10-10 18:00:46 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:00:49 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 18:00:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:00:55 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:00:56 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 18:00:57 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:00:58 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:00:59 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 18:01:00 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:00 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:01 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:02 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:02 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:02 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:03 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:04 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:09 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:09 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:10 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:11 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:12 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 18:01:14 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:16 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:21 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:01:23 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:01:27 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 18:01:27 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:28 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:29 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 18:01:30 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:32 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:34 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:35 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:35 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 18:01:35 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:01:36 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.43)
+2026-10-10 18:01:38 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 18:01:46 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.43)
+2026-10-10 18:01:49 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:01:49 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 18:01:50 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:01:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 18:01:57 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:02:00 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:02:13 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 18:02:29 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:02:30 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:02:31 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:02:32 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:02:39 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 18:02:40 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_180045_b8bd8c94.mp4 in 115.23s
+2026-10-10 18:02:40 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 18:02:46 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 18:02:48 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 18:02:48 | WARNING  | utils.email_alert | HIGH alert: 2/2 recipient notification(s) sent (Uploaded Video: n3.mp4).
+2026-10-10 18:02:48 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 18:02:48 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 18:02:48 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 18:02:49 | WARNING  | dispatch.engine | Alert 17 (HIGH) raised no dispatch: video 6 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:02:49 | WARNING  | dispatch.engine | Alert 18 (HIGH) raised no dispatch: video 6 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:02:49 | WARNING  | dispatch.engine | Alert 19 (HIGH) raised no dispatch: video 6 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:02:49 | WARNING  | dispatch.engine | Alert 20 (HIGH) raised no dispatch: video 6 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:02:49 | INFO     | __main__ | Video 6 processed successfully.
+2026-10-10 18:03:50 | INFO     | __main__ | Authority deactivated: p2 (id=4) by 'Mahesh'.
+2026-10-10 18:03:52 | INFO     | __main__ | Authority activated: p2 (id=4) by 'Mahesh'.
+2026-10-10 18:04:12 | INFO     | __main__ | Authority deleted: p1 (id=1) by 'Mahesh'.
+2026-10-10 18:04:32 | INFO     | __main__ | Authority updated: p2 (id=4) by 'Mahesh'.
+2026-10-10 18:04:46 | INFO     | __main__ | Video uploaded: n3.mp4 -> 20261010_180446_f7ddb4d6.mp4 (id=7)
+2026-10-10 18:04:47 | WARNING  | detector.person_detector | YOLO weights not found at D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\trained_models\yolo26n.pt. Falling back to 'yolo26n.pt' (requires internet to auto-download).
+2026-10-10 18:04:47 | INFO     | detector.video_processor | Starting video processing: D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_180446_f7ddb4d6.mp4 (1168 frames @ 30.0 fps)
+2026-10-10 18:04:47 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:04:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 18:04:53 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:04:57 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:04:59 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 18:04:59 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:02 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 18:05:03 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:04 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:04 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:05 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:06 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:06 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:06 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:07 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:08 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:11 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:12 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:13 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:14 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:15 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 18:05:16 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:17 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:18 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:19 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:24 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:05:26 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:05:30 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 18:05:31 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:32 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:33 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.67)
+2026-10-10 18:05:34 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:36 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:39 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:40 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.67)
+2026-10-10 18:05:40 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:05:41 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.43)
+2026-10-10 18:05:42 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 18:05:51 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.43)
+2026-10-10 18:05:53 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:05:53 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=2.00)
+2026-10-10 18:05:54 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=1.00)
+2026-10-10 18:05:55 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.60)
+2026-10-10 18:06:02 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:06:06 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.50)
+2026-10-10 18:06:18 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 18:06:33 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=1.00)
+2026-10-10 18:06:35 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:06:35 | INFO     | detector.risk_analyzer | Risk escalated from SAFE to LOW due to crowd surge (growth_rate=0.50)
+2026-10-10 18:06:37 | INFO     | detector.risk_analyzer | Risk escalated from LOW to MEDIUM due to crowd surge (growth_rate=0.40)
+2026-10-10 18:06:44 | INFO     | detector.risk_analyzer | Risk escalated from MEDIUM to HIGH due to crowd surge (growth_rate=0.38)
+2026-10-10 18:06:45 | INFO     | detector.video_processor | Finished processing D:\CLAUDE\Krunal\Project\Stampede-With-Alerts-updated\Stampede-Prediction-With-Alerts-System\videos\uploads\20261010_180446_f7ddb4d6.mp4 in 118.67s
+2026-10-10 18:06:45 | WARNING  | utils.video_converter | FFmpeg not found - processed video keeps the OpenCV codec and may not play in the browser. Install FFmpeg or `pip install imageio-ffmpeg`.
+2026-10-10 18:06:51 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 18:06:53 | INFO     | utils.mailer | Email sent to swapnilborkar219@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 18:06:55 | INFO     | utils.mailer | Email sent to swapnilborkar1000@gmail.com: 🚨 HIGH STAMPEDE RISK ALERT — Uploaded Video: n3.mp4
+2026-10-10 18:06:55 | WARNING  | utils.email_alert | HIGH alert: 3/3 recipient notification(s) sent (Uploaded Video: n3.mp4).
+2026-10-10 18:06:55 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 18:06:55 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 18:06:55 | INFO     | utils.email_alert | HIGH alert notification skipped — within cooldown window.
+2026-10-10 18:06:56 | WARNING  | dispatch.engine | Alert 21 (HIGH) raised no dispatch: video 7 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:06:56 | WARNING  | dispatch.engine | Alert 22 (HIGH) raised no dispatch: video 7 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:06:56 | WARNING  | dispatch.engine | Alert 23 (HIGH) raised no dispatch: video 7 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:06:56 | WARNING  | dispatch.engine | Alert 24 (HIGH) raised no dispatch: video 7 has no coordinates. Tag the upload or live session with a registered location (Admin > Locations) so officers can be routed to it.
+2026-10-10 18:06:56 | INFO     | __main__ | Video 7 processed successfully.
+2026-10-10 18:07:18 | INFO     | __main__ | Authority deleted: E1 (id=3) by 'Mahesh'.
+2026-10-10 18:07:33 | INFO     | __main__ | User 'Mahesh' logged out.
+2026-10-10 18:08:57 | INFO     | __main__ | New user registered (pending email verification): Operator (user)
+2026-10-10 18:09:01 | INFO     | utils.mailer | Email sent to swapnilborkar1000@gmail.com: Verify your StampedeGuard account
+2026-10-10 18:09:01 | INFO     | utils.otp_service | register OTP emailed to user_id=3.
+2026-10-10 18:09:27 | INFO     | __main__ | User 'Operator' verified their email.
+2026-10-10 18:09:53 | INFO     | utils.mailer | Email sent to swapnilborkar1000@gmail.com: Your StampedeGuard login code
+2026-10-10 18:09:53 | INFO     | utils.otp_service | login OTP emailed to user_id=3.
+2026-10-10 18:09:53 | INFO     | __main__ | Password OK for 'Operator'; awaiting OTP verification.
+2026-10-10 18:10:15 | INFO     | __main__ | User 'Operator' completed 2FA and logged in.
+2026-10-10 18:13:45 | INFO     | __main__ | User 'Operator' logged out.
+2026-10-10 18:14:17 | INFO     | utils.mailer | Email sent to debuggedbymahesh@gmail.com: Your StampedeGuard login code
+2026-10-10 18:14:17 | INFO     | utils.otp_service | login OTP emailed to user_id=1.
+2026-10-10 18:14:17 | INFO     | __main__ | Password OK for 'Mahesh'; awaiting OTP verification.
+2026-10-10 18:14:29 | INFO     | __main__ | User 'Mahesh' completed 2FA and logged in.
+2026-10-10 18:21:40 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-1.
+2026-10-10 18:21:50 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-2.
+2026-10-10 18:21:53 | INFO     | dispatch.simulation | Simulation created demo officer sim-officer-3.
+2026-10-10 18:21:57 | INFO     | dispatch.simulation | Simulation deleted demo officer sim-officer-1.
+2026-10-10 18:21:59 | INFO     | dispatch.simulation | Simulation deleted demo officer sim-officer-2.
+2026-10-10 18:21:59 | INFO     | dispatch.simulation | Simulation deleted demo officer sim-officer-3.
+2026-10-10 18:22:32 | INFO     | __main__ | User 'Mahesh' logged out.

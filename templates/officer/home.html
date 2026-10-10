@@ -1,0 +1,96 @@
+{% extends "officer/base.html" %}
+{% block title %}On duty{% endblock %}
+
+{% block content %}
+
+  {# The duty switch is the hero when nothing is happening, because when no
+     incident is live the only question that matters to an officer is
+     "can dispatch see me right now?" #}
+  <section class="duty {{ 'is-on' if current_user.on_duty else 'is-off' }}" id="duty-panel">
+    <div class="duty-top">
+      <div>
+        <div class="duty-label">Availability</div>
+        <div class="duty-state" id="duty-state">
+          {{ 'On duty' if current_user.on_duty else 'Off duty' }}
+        </div>
+      </div>
+      <button type="button"
+              class="switch"
+              id="duty-toggle"
+              role="switch"
+              aria-checked="{{ 'true' if current_user.on_duty else 'false' }}"
+              aria-labelledby="duty-state">
+        <span class="sr-only">Toggle duty status</span>
+      </button>
+    </div>
+
+    <div class="gps">
+      <span class="dot {{ 'ok' if current_user.on_duty else '' }}" id="gps-dot"></span>
+      <span id="gps-text">
+        {% if current_user.on_duty %}
+          Location sharing is on.
+        {% else %}
+          Location is shared only while you are on duty.
+        {% endif %}
+      </span>
+    </div>
+  </section>
+
+  {# Push is optional and the page works without it, so this is a prompt,
+     not an error. It disappears once a device is registered. #}
+  {% if push_configured %}
+    <div class="notice" id="push-notice">
+      <strong>Get alerted with the app closed.</strong>
+      Without this, you will only see assignments while this screen is open.
+      <button type="button" class="notice-action" id="push-enable">
+        Turn on background alerts
+      </button>
+    </div>
+  {% else %}
+    <div class="notice">
+      <strong>Background alerts are not set up on this server.</strong>
+      You will still receive assignments while this screen is open.
+      {% if current_user.is_admin and push_reason %}
+        <br>{{ push_reason }}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if current_user.on_duty %}
+    <div class="standby">
+      <div class="standby-title">Standing by</div>
+      <p>
+        You are in the dispatch pool. If a crowd surge is detected near you,
+        this screen will take over and you will have
+        {{ offer_timeout | default(25) }} seconds to accept.
+      </p>
+    </div>
+  {% else %}
+    <div class="standby">
+      <div class="standby-title">You are not being dispatched</div>
+      <p>Switch on above to join the dispatch pool and start sharing your location.</p>
+    </div>
+  {% endif %}
+
+  {% if recent %}
+    <h2 class="section-head">Your recent assignments</h2>
+    <ul class="log">
+      {% for d in recent %}
+        <li>
+          <a class="log-row" href="{{ url_for('officer.dispatch_detail', dispatch_id=d.id) }}">
+            <span class="log-main">
+              <span class="log-title">{{ d.location_name or 'Unnamed location' }}</span>
+              <span class="log-sub">
+                {{ d.risk_level|title }} risk &middot; {{ d.created_at|localtime('%d %b, %H:%M') }}
+              </span>
+            </span>
+            <span class="tag {% if d.status == 'RESOLVED' %}resolved{% elif d.is_claimed %}live{% endif %}">
+              {{ d.status|replace('_', ' ')|title }}
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+{% endblock %}

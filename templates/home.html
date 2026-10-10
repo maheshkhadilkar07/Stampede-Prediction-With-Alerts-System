@@ -1,0 +1,106 @@
+{% extends "public_base.html" %}
+{% block title %}{{ site.name }} — AI-Powered Crowd Safety{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7">
+        <span class="hero-eyebrow"><i class="bi bi-shield-check me-1"></i>AI-Powered Crowd Safety</span>
+        <h1 class="hero-title brand-font">Spot dangerous crowd build-up <span style="color:var(--accent-blue);">before</span> it becomes a stampede.</h1>
+        <p class="hero-subtitle">{{ site.name }} watches live CCTV feeds and recorded video, counts people with YOLO26, measures how densely and how quickly a crowd is growing, and alerts the right responders the moment risk reaches HIGH or CRITICAL.</p>
+        <div class="hero-actions">
+          <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}" class="btn btn-gradient btn-lg">Launch Dashboard <i class="bi bi-arrow-right ms-1"></i></a>
+          <a href="{{ url_for('how_it_works') }}" class="btn btn-outline-glass btn-lg">See How It Works</a>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="glass-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <strong>Risk levels</strong><span class="small text-muted-soft">density + growth rate</span>
+          </div>
+          {% for level, info in [("SAFE","Normal conditions"),("LOW","Building - keep watching"),("MEDIUM","Elevated - prepare"),("HIGH","Dangerous - alert responders"),("CRITICAL","Immediate action")] %}
+          <div class="d-flex justify-content-between align-items-center py-2 {% if not loop.last %}border-bottom{% endif %}">
+            <span class="risk-badge risk-{{ level }}">{{ level }}</span>
+            <span class="small text-muted-soft">{{ info }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="stat-strip mt-5">
+      <div class="kpi"><div class="num">5</div><div class="lbl">risk levels</div></div>
+      <div class="kpi"><div class="num">2</div><div class="lbl">input modes: live &amp; recorded</div></div>
+      <div class="kpi"><div class="num">3</div><div class="lbl">live sources: webcam, RTSP, IP camera</div></div>
+      <div class="kpi"><div class="num">HIGH+</div><div class="lbl">alert threshold</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">Key features</h2>
+      <p class="section-sub">One pipeline for live cameras and uploaded footage, from detection to responder notification.</p>
+    </div>
+    <div class="row g-4">
+      {% for icon, title, text in [
+        ("bi-person-bounding-box","Person Detection","YOLO26 detects and counts people in every analysed frame."),
+        ("bi-grid-3x3-gap","Crowd Density","The frame is split into a grid so the most crowded zone is found, not just a total."),
+        ("bi-graph-up-arrow","Growth-Rate Analysis","A fast-growing crowd raises the risk level even before density alone would."),
+        ("bi-thermometer-half","Heatmap","A fading heat overlay shows where pressure is building on the video."),
+        ("bi-camera-video","CCTV Monitoring","Webcam, RTSP CCTV and IP cameras, with Fluvio streaming and automatic fallback."),
+        ("bi-geo-alt","Incident Map","Monitored locations on an OpenStreetMap view, coloured by risk level."),
+        ("bi-bell","Early Alerts","HIGH and CRITICAL alerts go to admins and location-matched responders."),
+        ("bi-file-earmark-pdf","PDF Reports","Download a report for any analysed video.")] %}
+      <div class="col-md-6 col-lg-3">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi {{ icon }}"></i></div>
+          <h5>{{ title }}</h5>
+          <p class="text-muted-soft small mb-0">{{ text }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-4"><a href="{{ url_for('features_page') }}" class="btn btn-outline-glass">All features</a></div>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">How it works</h2>
+      <p class="section-sub">From camera to alert in seven steps.</p>
+    </div>
+    <div class="pipeline-flow">
+      {% for step in ["CCTV / Video","YOLO Detection","Crowd Density","Growth Analysis","Risk Assessment","Heatmap","Alert"] %}
+        <span class="node">{{ step }}</span>{% if not loop.last %}<span class="arrow"><i class="bi bi-arrow-right"></i></span>{% endif %}
+      {% endfor %}
+    </div>
+    <div class="text-center mt-4"><a href="{{ url_for('how_it_works') }}" class="btn btn-outline-glass">Read the details</a></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="text-center">
+      <h2 class="section-title">Built with</h2>
+      <p class="section-sub">Open-source technology throughout.</p>
+    </div>
+    <div class="text-center">
+      {% for t in ["Python","Flask","YOLO26","OpenCV","NumPy","SQLite","Fluvio","Chart.js","Leaflet","OpenStreetMap","ReportLab","FFmpeg"] %}<span class="tech-pill">{{ t }}</span>{% endfor %}
+    </div>
+    <div class="text-center mt-4"><a href="{{ url_for('technology_page') }}" class="btn btn-outline-glass">Technology details</a></div>
+  </div>
+</section>
+
+<section class="section pt-0">
+  <div class="container">
+    <div class="glass-card text-center py-5">
+      <h3 class="brand-font mb-2">Ready to monitor a crowd?</h3>
+      <p class="text-muted-soft mb-4">Sign in to upload footage or connect a live camera.</p>
+      <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('login') }}" class="btn btn-gradient btn-lg">Launch Dashboard <i class="bi bi-arrow-right ms-1"></i></a>
+    </div>
+  </div>
+</section>
+{% endblock %}

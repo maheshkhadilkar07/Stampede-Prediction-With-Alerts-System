@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Live CCTV — StampedeGuard{% endblock %}
+{% block page_title %}Live CCTV{% endblock %}
+{% block page_sub %}Mode 2: real-time camera stream via Fluvio{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="glass-card mb-3">
+      {% if is_running %}
+        <img id="live-feed-img" src="{{ url_for('live_feed') }}" class="video-frame" alt="Live CCTV feed">
+      {% else %}
+        <div class="d-flex flex-column align-items-center justify-content-center py-5">
+          <i class="bi bi-camera-video-off" style="font-size: 2.5rem;" class="mb-3"></i>
+          <div class="text-muted-soft">No live session running. Pick a source and start below.</div>
+        </div>
+      {% endif %}
+    </div>
+
+    {% if is_running %}
+    <div class="glass-card">
+      <div class="row text-center g-3">
+        <div class="col-3">
+          <div class="small text-muted-soft">People</div>
+          <div class="mono" style="font-size:1.4rem;" id="live-person-count">0</div>
+        </div>
+        <div class="col-3">
+          <div class="small text-muted-soft">Max Cell Density</div>
+          <div class="mono" style="font-size:1.4rem;" id="live-density">0</div>
+        </div>
+        <div class="col-3">
+          <div class="small text-muted-soft">Risk Level</div>
+          <span id="live-risk-badge" class="badge" style="font-size:0.9rem;">SAFE</span>
+        </div>
+        <div class="col-3">
+          <div class="small text-muted-soft">FPS</div>
+          <div class="mono" style="font-size:1.4rem;" id="live-fps">0.0</div>
+        </div>
+      </div>
+      <div class="text-center mt-3">
+        <span id="live-mode-badge" class="badge {% if fluvio_active %}bg-success{% else %}bg-warning text-dark{% endif %}">
+          {{ "FLUVIO STREAMING" if fluvio_active else "DIRECT MODE" }}
+        </span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    <div class="glass-card">
+      <h6 class="mb-3"><i class="bi bi-sliders me-2"></i>Session Control</h6>
+
+      {% if is_running %}
+        <p class="text-muted-soft small">
+          A live session is currently running (source: <strong>{{ source_type }}</strong>).
+        </p>
+        <form method="POST" action="{{ url_for('live_stop') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-outline-glass w-100">
+            <i class="bi bi-stop-circle me-2"></i>Stop Live Session
+          </button>
+        </form>
+      {% else %}
+        <form method="POST" action="{{ url_for('live_start') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label small text-muted-soft">Camera Source</label>
+            <select name="source_type" id="source-type-select" class="form-select" onchange="document.getElementById('rtsp-url-group').classList.toggle('d-none', this.value === 'webcam')">
+              <option value="webcam">Laptop Webcam</option>
+              <option value="rtsp">RTSP CCTV Stream</option>
+              <option value="ip">IP Camera (HTTP/MJPEG URL)</option>
+            </select>
+          </div>
+          <div class="mb-3 d-none" id="rtsp-url-group">
+            <label class="form-label small text-muted-soft">Stream URL</label>
+            <input type="text" name="source_url" class="form-control" placeholder="rtsp://user:pass@192.168.1.10:554/stream1">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted-soft"><i class="bi bi-geo-alt me-1"></i>Location (optional)</label>
+            <input type="text" name="location_name" class="form-control mb-2" placeholder="e.g. North Entrance, Camera 3">
+            <div class="row g-2">
+              <div class="col-6"><input type="text" name="latitude" class="form-control" placeholder="Latitude"></div>
+              <div class="col-6"><input type="text" name="longitude" class="form-control" placeholder="Longitude"></div>
+            </div>
+            <div class="form-text">Tags this camera on the Risk Map. Leave blank to skip.</div>
+          </div>
+          <button type="submit" class="btn btn-gradient w-100">
+            <i class="bi bi-play-circle me-2"></i>Start Live Session
+          </button>
+        </form>
+
+        {% if not fluvio_enabled_in_config %}
+          <div class="text-warning small mt-3">
+            <i class="bi bi-exclamation-triangle me-1"></i>Fluvio streaming is disabled in config.py.
+          </div>
+        {% else %}
+          <div class="text-muted-soft small mt-3">
+            <i class="bi bi-info-circle me-1"></i>
+            If no Fluvio cluster is reachable, the session automatically falls back to
+            direct in-process streaming (camera → YOLO, no message broker).
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{% if is_running %}
+<script>
+  pollLiveStatus();
+</script>
+{% endif %}
+{% endblock %}

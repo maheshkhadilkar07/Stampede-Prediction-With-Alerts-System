@@ -1,0 +1,151 @@
+"""
+utils/mailer.py
+==================
+Single low-level SMTP send function shared by utils/email_alert.py
+(risk alerts) and utils/otp_service.py (login OTP codes), so there is
+one place that actually talks to smtplib.
+
+Save this file at: Stampede-Prediction-System/utils/mailer.py
+"""
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+import config
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+def smtp_configured() -> bool:
+    """True if enough SMTP credentials are present in .env to attempt a send."""
+    return bool(config.SMTP_HOST and config.SMTP_USERNAME and config.SMTP_PASSWORD)
+
+
+def send_email(subject: str, body_text: str, recipients: list) -> bool:
+    """
+    Send a plain-text email to one or more recipients. Returns True only
+    if the send actually succeeded. Never raises — callers (background
+    threads, the login route) must not crash because an email failed.
+    """
+    if not recipients:
+        logger.warning("send_email() called with no recipients — skipping.")
+        return False
+
+    if not smtp_configured():
+        logger.warning(
+            "SMTP not configured (SMTP_HOST/SMTP_USERNAME/SMTP_PASSWORD missing "
+            "from .env) — cannot send email."
+        )
+        return False
+
+    msg = MIMEMultipart()
+    msg["Subject"] = subject
+    msg["From"] = config.ALERT_EMAIL_FROM
+    msg["To"] = ", ".join(recipients)
+    msg.attach(MIMEText(body_text, "plain"))
+
+    try:
+        with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT, timeout=10) as server:
+            if config.SMTP_USE_TLS:
+                server.starttls()
+            server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
+            server.sendmail(config.ALERT_EMAIL_FROM, recipients, msg.as_string())
+        logger.info(f"Email sent to {', '.join(recipients)}: {subject}")
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to send email to {', '.join(recipients)}: {exc}")
+        return False
+
+
+def send_email_per_recipient(subject: str, body_text: str, recipients: list) -> dict:
+    """
+    Send the SAME email individually to each recipient over one SMTP
+    connection, so a failure for one address (bad email, SMTP
+    rejection) doesn't affect the others, and each recipient's outcome
+    can be tracked separately (used for AlertDelivery rows).
+
+    Returns {email: {"sent": bool, "error": str|None}} for every
+    recipient in the input list. If SMTP isn't configured at all,
+    every recipient is marked sent=False with an explanatory error.
+    """
+    results = {}
+    if not recipients:
+        return results
+
+    if not smtp_configured():
+        error = "SMTP not configured (SMTP_HOST/SMTP_USERNAME/SMTP_PASSWORD missing from .env)."
+        logger.warning(error)
+        return {r: {"sent": False, "error": error} for r in recipients}
+
+    try:
+        with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT, timeout=10) as server:
+            if config.SMTP_USE_TLS:
+                server.starttls()
+            server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
+
+            for recipient in recipients:
+                msg = MIMEMultipart()
+                msg["Subject"] = subject
+                msg["From"] = config.ALERT_EMAIL_FROM
+                msg["To"] = recipient
+                msg.attach(MIMEText(body_text, "plain"))
+                try:
+                    server.sendmail(config.ALERT_EMAIL_FROM, [recipient], msg.as_string())
+                    results[recipient] = {"sent": True, "error": None}
+                    logger.info(f"Email sent to {recipient}: {subject}")
+                except Exception as exc:  # noqa: BLE001
+                    results[recipient] = {"sent": False, "error": str(exc)}
+                    logger.error(f"Failed to send email to {recipient}: {exc}")
+
+    except Exception as exc:  # noqa: BLE001
+        # Could not even establish the SMTP connection — every recipient fails.
+        logger.error(f"SMTP connection failed, cannot send to any recipient: {exc}")
+        for recipient in recipients:
+            results.setdefault(recipient, {"sent": False, "error": str(exc)})
+
+    return results
+
+
+def send_test_email(recipient: str) -> tuple:
+    """
+    Diagnostic helper for the admin "Send test email" button. Unlike
+    send_email(), which only returns a bool, this returns (ok, detail) where
+    detail is the EXACT reason on failure (auth error, connection/port block,
+    TLS problem, empty From) so the operator can actually fix it.
+    """
+    if not smtp_configured():
+        return False, ("SMTP not fully configured — need SMTP_HOST, SMTP_USERNAME and "
+                       "SMTP_PASSWORD in .env.")
+    if not config.ALERT_EMAIL_FROM:
+        return False, ("From-address is empty — set ALERT_EMAIL_FROM in .env "
+                       "(it otherwise falls back to SMTP_USERNAME).")
+
+    msg = MIMEMultipart()
+    msg["Subject"] = "StampedeGuard test email"
+    msg["From"] = config.ALERT_EMAIL_FROM
+    msg["To"] = recipient
+    msg.attach(MIMEText(
+        "This is a test email from your Stampede Prediction & Alert System.\n"
+        "If you received it, SMTP is configured correctly.", "plain"))
+
+    try:
+        with smtplib.SMTP(config.SMTP_HOST, config.SMTP_PORT, timeout=15) as server:
+            server.ehlo()
+            if config.SMTP_USE_TLS:
+                server.starttls()
+                server.ehlo()
+            server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
+            server.sendmail(config.ALERT_EMAIL_FROM, [recipient], msg.as_string())
+        logger.info(f"Test email sent to {recipient}.")
+        return True, f"Sent to {recipient}."
+    except smtplib.SMTPAuthenticationError as exc:
+        return False, (
+            f"Authentication failed ({exc.smtp_code} {exc.smtp_error!r}). For Gmail the "
+            "password MUST be a 16-character App Password (not your normal password) — "
+            "create one at https://myaccount.google.com/apppasswords")
+    except smtplib.SMTPConnectError as exc:
+        return False, f"Could not connect to {config.SMTP_HOST}:{config.SMTP_PORT} — {exc}"
+    except Exception as exc:  # noqa: BLE001
+        return False, f"{type(exc).__name__}: {exc}"
